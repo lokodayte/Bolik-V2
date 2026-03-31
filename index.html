@@ -1408,6 +1408,8 @@
             }
         }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 </head>
 
 <body>
@@ -1505,14 +1507,29 @@
         const SUPERADMIN_EMAIL = 'b.sargsyan@student.uwcdilijan.am';
         const CARD_NUMBER = '4169 7385 2910 4401';
 
+        // ── FIREBASE ──
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxem36soBAXOsfGHGgf33O9odr3mM6uy0",
+            authDomain: "bolik-v2.firebaseapp.com",
+            databaseURL: "https://bolik-v2-default-rtdb.firebaseio.com",
+            projectId: "bolik-v2",
+            storageBucket: "bolik-v2.firebasestorage.app",
+            messagingSenderId: "919070471375",
+            appId: "1:919070471375:web:39b5f3f8645fb98a30b3ba"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const _fb = firebase.database();
+        const _ref = { users: _fb.ref('bolik_users'), orders: _fb.ref('bolik_orders'), products: _fb.ref('bolik_products') };
+
         // ── STATE ──
         let cart = [];
         let selectedRole = 'customer';
         let currentUser = null;
         let currentPage = null;
-        let _lastOrdersSnap = '';
-        let _lastProductsSnap = '';
-        let _pollInterval = null;
+        let _dbUsers = [];
+        let _dbOrders = [];
+        let _dbProducts = [];
+        let _firebaseReady = false;
 
         // ── HELPERS ──
         const $ = id => document.getElementById(id);
@@ -1521,15 +1538,16 @@
         const genId = () => 'BO-' + Math.random().toString(36).substr(2, 4).toUpperCase();
         const fmtDate = d => { const o = new Date(d); return o.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + o.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) };
         const dateKey = d => new Date(d).toISOString().split('T')[0];
-        //const validEmail=e=>/^[^@]+@(uwcdilijan\.am|student\.uwcdilijan\.am)$/i.test(e);
+        function _fbArr(snap) { const v = snap.val(); if (!v) return []; return Array.isArray(v) ? v.filter(Boolean) : Object.values(v); }
 
-        function getUsers() { return ls('bolik_users') || [] }
-        function saveUsers(u) { ls('bolik_users', u) }
-        function getOrders() { return ls('bolik_orders') || [] }
-        function saveOrders(o) { ls('bolik_orders', o) }
-        function getProducts() { let p = ls('bolik_products'); if (!p) { p = [...DEFAULT_PRODUCTS]; ls('bolik_products', p) } return p }
-        function saveProducts(p) { ls('bolik_products', p) }
-        function initSuperadmin() { let u = getUsers(); if (!u.find(x => x.email === SUPERADMIN_EMAIL)) { u.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Babken Sargsyan', role: 'superadmin' }); saveUsers(u) } }
+        // ── DATA (Firebase-backed with local cache) ──
+        function getUsers() { return _dbUsers; }
+        function saveUsers(u) { _dbUsers = [...u]; _ref.users.set(u); }
+        function getOrders() { return _dbOrders; }
+        function saveOrders(o) { _dbOrders = [...o]; _ref.orders.set(o); }
+        function getProducts() { return _dbProducts.length ? _dbProducts : [...DEFAULT_PRODUCTS]; }
+        function saveProducts(p) { _dbProducts = [...p]; _ref.products.set(p); }
+        function initSuperadmin() { if (!_dbUsers.find(x => x.email === SUPERADMIN_EMAIL)) { _dbUsers.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Babken Sargsyan', role: 'superadmin' }); saveUsers(_dbUsers); } }
 
         // ── TOAST ──
         function toast(msg, type = 'info') { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = (type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ') + ' ' + msg; $('toast-container').appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300) }, 3500) }
@@ -1563,8 +1581,8 @@
             loginAs({ email, name, role }); toast('Welcome to Bolik, ' + name.split(' ')[0] + '!', 'success');
         }
 
-        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending'); startPolling() }
-        function logout() { if (_pollInterval) clearInterval(_pollInterval); currentUser = null; currentPage = null; ls('bolik_session', null); cart = []; $('app').style.display = 'none'; $('auth-page').style.display = 'flex'; $('login-form').reset(); $('register-form').reset(); showAuthTab('login') }
+        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending') }
+        function logout() { currentUser = null; currentPage = null; ls('bolik_session', null); cart = []; $('app').style.display = 'none'; $('auth-page').style.display = 'flex'; $('login-form').reset(); $('register-form').reset(); showAuthTab('login') }
 
         // ── NAV ──
         function buildNav() {
@@ -1595,46 +1613,30 @@
             window.scrollTo(0, 0);
         }
 
-        // ── LIVE REFRESH ──
-        // Cross-tab sync: when another tab writes to localStorage, refresh the view
-        window.addEventListener('storage', function(e) {
-            if (!currentUser) return;
-            if (e.key === 'bolik_orders' || e.key === 'bolik_products') {
-                refreshCurrentPage();
-            }
-        });
-
-        // Polling: compare raw localStorage strings every 1.5s to detect ANY change
-        function startPolling() {
-            if (_pollInterval) clearInterval(_pollInterval);
-            _lastOrdersSnap = localStorage.getItem('bolik_orders') || '';
-            _lastProductsSnap = localStorage.getItem('bolik_products') || '';
-            _pollInterval = setInterval(function() {
-                if (!currentUser) return;
-                const curOrders = localStorage.getItem('bolik_orders') || '';
-                const curProducts = localStorage.getItem('bolik_products') || '';
-                let changed = false;
-                if (curOrders !== _lastOrdersSnap) {
-                    _lastOrdersSnap = curOrders;
-                    changed = true;
-                }
-                if (curProducts !== _lastProductsSnap) {
-                    _lastProductsSnap = curProducts;
-                    changed = true;
-                }
-                if (changed) refreshCurrentPage();
-            }, 1500);
-        }
-
+        // ── LIVE REFRESH (Firebase real-time listeners) ──
         function refreshCurrentPage() {
             if (!currentUser || !currentPage) return;
             const m = $('main-content');
             if (!m) return;
-            // Only auto-refresh order-related pages (not checkout/confirmation to avoid data loss)
             if (currentPage === 'pending') renderPendingOrders(m);
             else if (currentPage === 'emporders') renderEmpOrders(m);
             else if (currentPage === 'myorders') renderCustomerOrders(m);
             else if (currentPage === 'admin') renderAdmin(m);
+            else if (currentPage === 'menu') renderMenu(m);
+        }
+
+        function setupFirebaseListeners() {
+            _ref.users.on('value', function(snap) {
+                _dbUsers = _fbArr(snap);
+            });
+            _ref.orders.on('value', function(snap) {
+                _dbOrders = _fbArr(snap);
+                if (_firebaseReady) refreshCurrentPage();
+            });
+            _ref.products.on('value', function(snap) {
+                _dbProducts = _fbArr(snap);
+                if (_firebaseReady) refreshCurrentPage();
+            });
         }
 
         // ── MENU ──
@@ -1888,10 +1890,47 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
 
         // ── INIT ──
         document.addEventListener('DOMContentLoaded', () => {
-            initSuperadmin(); getProducts();
-            const session = ls('bolik_session');
-            if (session) { const users = getUsers(); const u = users.find(x => x.email === session.email); if (u) { loginAs(u); return } }
+            // Show loading state
             $('auth-page').style.display = 'flex';
+            $('auth-page').querySelector('.auth-brand').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Connecting to server...</p>';
+
+            // Set up real-time listeners
+            setupFirebaseListeners();
+
+            // Wait for initial data load, then start app
+            let _loadCheck = setInterval(() => {
+                // Once users ref has fired at least once, we're ready
+                _ref.users.once('value').then(snap => {
+                    clearInterval(_loadCheck);
+                    _dbUsers = _fbArr(snap);
+                    return _ref.orders.once('value');
+                }).then(snap => {
+                    _dbOrders = _fbArr(snap);
+                    return _ref.products.once('value');
+                }).then(snap => {
+                    _dbProducts = _fbArr(snap);
+
+                    // Init data if first run
+                    initSuperadmin();
+                    if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
+
+                    _firebaseReady = true;
+
+                    // Restore session
+                    $('auth-page').querySelector('.auth-brand').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Handcrafted bubble tea, delivered to your door</p>';
+                    const session = ls('bolik_session');
+                    if (session) {
+                        const u = _dbUsers.find(x => x.email === session.email);
+                        if (u) { loginAs(u); return; }
+                    }
+                    $('auth-page').style.display = 'flex';
+                }).catch(err => {
+                    console.error('Firebase init error:', err);
+                    $('auth-page').querySelector('.auth-brand').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed. Please refresh.</p>';
+                });
+            }, 100);
+            // Only run once
+            setTimeout(() => clearInterval(_loadCheck), 500);
         });
 
     </script>
