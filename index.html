@@ -1510,7 +1510,8 @@
         let selectedRole = 'customer';
         let currentUser = null;
         let currentPage = null;
-        let _lastOrderCount = 0;
+        let _lastOrdersSnap = '';
+        let _lastProductsSnap = '';
         let _pollInterval = null;
 
         // ── HELPERS ──
@@ -1603,18 +1604,26 @@
             }
         });
 
-        // Same-tab polling: check for new orders every 2 seconds
+        // Polling: compare raw localStorage strings every 1.5s to detect ANY change
         function startPolling() {
             if (_pollInterval) clearInterval(_pollInterval);
-            _lastOrderCount = getOrders().length;
+            _lastOrdersSnap = localStorage.getItem('bolik_orders') || '';
+            _lastProductsSnap = localStorage.getItem('bolik_products') || '';
             _pollInterval = setInterval(function() {
                 if (!currentUser) return;
-                const orders = getOrders();
-                if (orders.length !== _lastOrderCount) {
-                    _lastOrderCount = orders.length;
-                    refreshCurrentPage();
+                const curOrders = localStorage.getItem('bolik_orders') || '';
+                const curProducts = localStorage.getItem('bolik_products') || '';
+                let changed = false;
+                if (curOrders !== _lastOrdersSnap) {
+                    _lastOrdersSnap = curOrders;
+                    changed = true;
                 }
-            }, 2000);
+                if (curProducts !== _lastProductsSnap) {
+                    _lastProductsSnap = curProducts;
+                    changed = true;
+                }
+                if (changed) refreshCurrentPage();
+            }, 1500);
         }
 
         function refreshCurrentPage() {
