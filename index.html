@@ -727,7 +727,8 @@
             box-shadow: var(--shadow);
             max-width: 600px;
             margin: 0 auto;
-            animation: fadeUp .4s ease
+            animation: fadeUp .4s ease;
+            margin-bottom: 40px
         }
 
         .checkout-card h2 {
@@ -1299,7 +1300,9 @@
             }
 
             main {
-                padding: 76px 12px 24px
+                padding: 76px 12px 32px;
+                padding-bottom: 60px;
+                -webkit-overflow-scrolling: touch
             }
 
             #cart-panel {
@@ -1312,11 +1315,60 @@
 
             .modal {
                 padding: 24px 20px;
-                margin: 10px
+                margin: 10px;
+                max-height: 85vh
             }
 
             .auth-card {
                 padding: 32px 24px
+            }
+
+            .checkout-card {
+                padding: 20px 16px;
+                margin-bottom: 60px;
+                border-radius: 16px
+            }
+
+            .checkout-card h2 {
+                font-size: 1.3rem
+            }
+
+            .order-summary-items {
+                padding: 12px;
+                margin-bottom: 16px
+            }
+
+            .osi {
+                flex-wrap: wrap;
+                gap: 4px
+            }
+
+            .payment-tabs {
+                gap: 6px
+            }
+
+            .payment-tabs button {
+                padding: 10px 8px;
+                font-size: .85rem
+            }
+
+            .card-display {
+                font-size: 1.05rem;
+                letter-spacing: 2px;
+                padding: 16px
+            }
+
+            .upload-area {
+                padding: 24px 16px
+            }
+
+            .cash-amounts {
+                gap: 6px
+            }
+
+            .cash-amounts button {
+                padding: 8px 12px;
+                font-size: .8rem
             }
 
             .admin-form .form-row {
@@ -1349,6 +1401,10 @@
 
             .page-title {
                 font-size: 1.4rem
+            }
+
+            .checkout-card {
+                padding: 16px 12px
             }
         }
     </style>
@@ -1453,6 +1509,9 @@
         let cart = [];
         let selectedRole = 'customer';
         let currentUser = null;
+        let currentPage = null;
+        let _lastOrderCount = 0;
+        let _pollInterval = null;
 
         // ── HELPERS ──
         const $ = id => document.getElementById(id);
@@ -1503,8 +1562,8 @@
             loginAs({ email, name, role }); toast('Welcome to Bolik, ' + name.split(' ')[0] + '!', 'success');
         }
 
-        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending') }
-        function logout() { currentUser = null; ls('bolik_session', null); cart = []; $('app').style.display = 'none'; $('auth-page').style.display = 'flex'; $('login-form').reset(); $('register-form').reset(); showAuthTab('login') }
+        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending'); startPolling() }
+        function logout() { if (_pollInterval) clearInterval(_pollInterval); currentUser = null; currentPage = null; ls('bolik_session', null); cart = []; $('app').style.display = 'none'; $('auth-page').style.display = 'flex'; $('login-form').reset(); $('register-form').reset(); showAuthTab('login') }
 
         // ── NAV ──
         function buildNav() {
@@ -1520,6 +1579,7 @@
         }
 
         function navigate(page) {
+            currentPage = page;
             document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === page));
             const m = $('main-content');
             if (page === 'menu') renderMenu(m);
@@ -1530,6 +1590,42 @@
             else if (page === 'checkout') renderCheckout(m);
             else if (page === 'confirmation') renderConfirmation(m);
             closeCart();
+            // Scroll to top on page change (helps mobile)
+            window.scrollTo(0, 0);
+        }
+
+        // ── LIVE REFRESH ──
+        // Cross-tab sync: when another tab writes to localStorage, refresh the view
+        window.addEventListener('storage', function(e) {
+            if (!currentUser) return;
+            if (e.key === 'bolik_orders' || e.key === 'bolik_products') {
+                refreshCurrentPage();
+            }
+        });
+
+        // Same-tab polling: check for new orders every 2 seconds
+        function startPolling() {
+            if (_pollInterval) clearInterval(_pollInterval);
+            _lastOrderCount = getOrders().length;
+            _pollInterval = setInterval(function() {
+                if (!currentUser) return;
+                const orders = getOrders();
+                if (orders.length !== _lastOrderCount) {
+                    _lastOrderCount = orders.length;
+                    refreshCurrentPage();
+                }
+            }, 2000);
+        }
+
+        function refreshCurrentPage() {
+            if (!currentUser || !currentPage) return;
+            const m = $('main-content');
+            if (!m) return;
+            // Only auto-refresh order-related pages (not checkout/confirmation to avoid data loss)
+            if (currentPage === 'pending') renderPendingOrders(m);
+            else if (currentPage === 'emporders') renderEmpOrders(m);
+            else if (currentPage === 'myorders') renderCustomerOrders(m);
+            else if (currentPage === 'admin') renderAdmin(m);
         }
 
         // ── MENU ──
