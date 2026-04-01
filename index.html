@@ -197,6 +197,208 @@
             font-weight: 700
         }
 
+        /* ── LANDING PAGE ── */
+        #landing-page {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dark), #2c1a0c);
+            color: var(--surface);
+            position: relative;
+            overflow: hidden;
+            z-index: 10000;
+        }
+
+        #landing-page::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(201,133,10,0.3) 0%, rgba(201,133,10,0) 70%);
+            border-radius: 50%;
+            filter: blur(60px);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        #landing-page::after {
+            content: '';
+            position: absolute;
+            bottom: -15%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(232,184,75,0.2) 0%, rgba(26,15,6,0) 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .lp-content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .lp-header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            animation: fadeInDown 1s ease;
+        }
+
+        .lp-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .lp-logo span { color: var(--surface); }
+
+        .btn-enter {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--surface);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-enter:hover {
+            background: var(--amber);
+            border-color: var(--amber);
+            box-shadow: 0 4px 15px rgba(201,133,10,0.4);
+            transform: translateY(-2px);
+        }
+
+        .lp-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 12vh;
+            max-width: 800px;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .lp-hero h1 {
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            line-height: 1.1;
+            margin-bottom: 24px;
+            color: var(--surface);
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .lp-hero h1 span {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        .lp-hero p {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            line-height: 1.5;
+            font-weight: 300;
+        }
+
+        .lp-leaders {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 60px;
+            width: 100%;
+            max-width: 1000px;
+            animation: fadeIn 1s ease 0.6s both;
+        }
+        
+        .lp-leaders h3 {
+            font-family: 'DM Sans', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            color: var(--taupe);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .leaders-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .leader-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius);
+            padding: 30px;
+            width: 280px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .leader-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(201,133,10,0.3);
+        }
+
+        .leader-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--amber), var(--taupe));
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            color: var(--dark);
+            box-shadow: inset 0 0 0 3px rgba(26,15,6,0.3);
+        }
+
+        .leader-card h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            color: var(--surface);
+        }
+
+        .leader-card p {
+            color: var(--gold);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         /* AUTH */
         #auth-page {
             min-height: 100vh;
@@ -1505,7 +1707,7 @@
             { id: 7, name: 'Lychee Rose Garden', emoji: '🌹', description: 'Delicate lychee meets aromatic rose petals in a floral symphony', price: 1700, tag: 'Signature' }
         ];
         const SUPERADMIN_EMAIL = 'b.sargsyan@student.uwcdilijan.am';
-        const CARD_NUMBER = '4169 7385 2910 4401';
+        const CARD_NUMBER = 'Elina: 4083 0600 1503 9825';
 
         // ── FIREBASE ──
         const firebaseConfig = {
@@ -1611,8 +1813,9 @@
             loginAs({ email, name, role }); toast('Welcome to Bolik, ' + name.split(' ')[0] + '!', 'success');
         }
 
-        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending') }
+        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('landing-page').style.display = 'none'; $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending') }
         function logout() { currentUser = null; currentPage = null; ls('bolik_session', null); cart = []; $('app').style.display = 'none'; $('auth-page').style.display = 'flex'; $('login-form').reset(); $('register-form').reset(); showAuthTab('login') }
+        function goToAuth() { $('landing-page').style.display = 'none'; $('auth-page').style.display = 'flex'; }
 
         // ── NAV ──
         function buildNav() {
@@ -1622,7 +1825,7 @@
                 cb.classList.remove('hidden'); updateCartBadge();
             } else {
                 nl.innerHTML = '<button onclick="navigate(\'pending\')" data-nav="pending">Pending Orders</button><button onclick="navigate(\'emporders\')" data-nav="emporders">My Orders</button>';
-                if (currentUser.role === 'superadmin') nl.innerHTML += '<button onclick="navigate(\'admin\')" data-nav="admin">Admin</button>';
+                if (currentUser.role === 'superadmin' || currentUser.role === 'admin') nl.innerHTML += '<button onclick="navigate(\'admin\')" data-nav="admin">Admin</button>';
                 cb.classList.add('hidden');
             }
         }
@@ -1829,7 +2032,7 @@
             if (!currentUser || !currentPage) return;
             const m = $('main-content');
             if (!m) return;
-            
+
             if (currentPage === 'pending') {
                 const g = $('ep-grid');
                 if (g) {
@@ -1844,16 +2047,16 @@
                     const orders = getOrders().filter(o => o.takenBy === currentUser.email || (o.status === 'pending' && !o.takenBy)).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     const active = orders.filter(o => o.status !== 'delivered');
                     const done = orders.filter(o => o.status === 'delivered');
-                    
+
                     const buttons = document.querySelectorAll('.tabs-row button');
                     if (buttons.length >= 2) {
-                         buttons[0].textContent = `Active (${active.length})`;
-                         buttons[1].textContent = `Completed (${done.length})`;
+                        buttons[0].textContent = `Active (${active.length})`;
+                        buttons[1].textContent = `Completed (${done.length})`;
                     }
-                    
+
                     if (active.length) activeWrapper.innerHTML = active.map(o => orderCardHTML(o, o.status === 'pending')).join('');
                     else activeWrapper.innerHTML = '<div class="empty-state"><span class="es-icon">📭</span><p>No active orders.</p></div>';
-                    
+
                     if (done.length) doneWrapper.innerHTML = done.map(o => orderCardHTML(o, false)).join('');
                     else doneWrapper.innerHTML = '<div class="empty-state"><span class="es-icon">✨</span><p>No completed orders yet.</p></div>';
                 } else renderEmpOrders(m);
@@ -2247,12 +2450,13 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
         let adminTab = 'history';
         function renderAdmin(m) {
             m.innerHTML = `<h1 class="page-title">Admin Panel</h1><p class="page-subtitle">Manage orders, products, accounts, and track revenue</p>
-<div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'toppings' ? 'active' : ''}" onclick="adminNav('toppings')">🫧 Toppings</button><button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button></div>
+<div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'toppings' ? 'active' : ''}" onclick="adminNav('toppings')">🫧 Toppings</button>${currentUser.role === 'superadmin' ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}</div>
 <div id="admin-content"></div>`;
             renderAdminTab();
         }
         function adminNav(t) { adminTab = t; document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); renderAdminTab() }
         function renderAdminTab() {
+            if (currentUser.role !== 'superadmin' && adminTab === 'accounts') adminTab = 'history';
             const c = $('admin-content'); if (!c) return;
             if (adminTab === 'history') renderAdminHistory(c);
             else if (adminTab === 'profit') renderAdminProfit(c);
@@ -2359,14 +2563,32 @@ ${rows.map(r => `<tr><td>${new Date(r.date + 'T00:00:00').toLocaleDateString('en
         function deleteTopping(idx) { const toppings = getToppings(); toppings.splice(idx, 1); saveToppings(toppings); toast('Topping removed', 'info'); renderAdminTab() }
 
         function renderAdminAccounts(c) {
+            if (currentUser.role !== 'superadmin') return;
             const users = getUsers();
             c.innerHTML = `<h3 style="margin-bottom:16px">Registered Accounts (${users.length})</h3>
 <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>
-${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="status-badge ${u.role === 'superadmin' ? 'ready' : u.role === 'employee' ? 'preparing' : 'pending'}">${u.role}</span></td>
+${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>
+<select class="role-changer" onchange="changeAccountRole('${u.email}', this.value)" ${u.email === currentUser.email || u.role === 'superadmin' ? 'disabled' : ''} style="padding:4px;border-radius:4px;background:var(--surface);color:var(--text);border:1px solid var(--border)">
+    <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>Customer</option>
+    <option value="employee" ${u.role === 'employee' ? 'selected' : ''}>Staff</option>
+    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+    ${u.role === 'superadmin' ? '<option value="superadmin" selected>Superadmin</option>' : ''}
+</select>
+</td>
 <td>${u.email === currentUser.email ? '<span style="color:var(--taupe);font-size:.8rem">You</span>' : `<button class="btn-danger btn-sm" onclick="deleteAccount('${u.email}')">Delete</button>`}</td></tr>`).join('')}
 </tbody></table></div>`;
         }
+        function changeAccountRole(email, newRole) {
+            if (currentUser.role !== 'superadmin') return;
+            let users = getUsers();
+            let u = users.find(x => x.email === email);
+            if (!u || u.role === 'superadmin') return;
+            u.role = newRole;
+            saveUsers(users);
+            toast('Role updated', 'success');
+        }
         function deleteAccount(email) {
+            if (currentUser.role !== 'superadmin') return;
             if (email === currentUser.email) return; let users = getUsers().filter(u => u.email !== email); saveUsers(users);
             let orders = getOrders().filter(o => o.customerEmail !== email); saveOrders(orders);
             toast('Account deleted', 'info'); renderAdminTab()
@@ -2374,9 +2596,9 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
 
         // ── INIT ──
         document.addEventListener('DOMContentLoaded', () => {
-            // Show loading state
-            $('auth-page').style.display = 'flex';
-            $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Connecting to server...</p>';
+            // Show landing page state initially
+            $('landing-page').style.display = 'flex';
+            $('auth-page').style.display = 'none';
 
             // Set up real-time listeners
             setupFirebaseListeners();
@@ -2406,15 +2628,16 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
                 _firebaseReady = true;
 
                 // Restore session
-                $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Handcrafted bubble tea, delivered to your door</p>';
                 const session = ls('bolik_session');
                 if (session) {
                     const u = _dbUsers.find(x => x && x.email && x.email === session.email);
                     if (u) { loginAs(u); return; }
                 }
-                $('auth-page').style.display = 'flex';
+                // Leave landing page visible if no session
             }).catch(err => {
                 console.error('Firebase init error:', err);
+                $('landing-page').style.display = 'none';
+                $('auth-page').style.display = 'flex';
                 $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed: ' + err.message + '</p>';
             });
         });
