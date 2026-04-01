@@ -1705,8 +1705,8 @@
             <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
 
             <div class="oc-items">
-                ${o.items.map(i =>
-                `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${i.toppings.length ? ' + ' + i.toppings.join(', ') : ''}`
+                ${(o.items || []).map(i =>
+                `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`
             ).join('<br>')}
             </div>
 
@@ -1749,7 +1749,7 @@
             toast('Order ' + id + ' claimed!', 'success');
 
             // stay on whichever employee page the user is already using
-            refreshCurrentPage();
+            refreshOrdersUI();
         }
 
         function markOrder(id, status) {
@@ -1762,7 +1762,7 @@
             saveOrders(orders);
             toast('Order ' + id + ' marked as ' + status, 'success');
 
-            refreshCurrentPage();
+            refreshOrdersUI();
         }
 
         // ── EMPLOYEE: MY ORDERS ──
@@ -1825,6 +1825,61 @@
         }
 
         // ── LIVE REFRESH (Firebase real-time listeners) ──
+        function refreshOrdersUI() {
+            if (!currentUser || !currentPage) return;
+            const m = $('main-content');
+            if (!m) return;
+            
+            if (currentPage === 'pending') {
+                const g = $('ep-grid');
+                if (g) {
+                    const orders = getOrders().filter(o => o.status === 'pending').sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    if (!orders.length) g.innerHTML = '<div class="empty-state"><span class="es-icon">🎉</span><p>All caught up — no pending orders right now!</p></div>';
+                    else g.innerHTML = orders.map(o => orderCardHTML(o, true)).join('');
+                } else renderPendingOrders(m);
+            } else if (currentPage === 'emporders') {
+                const activeWrapper = $('emp-active');
+                const doneWrapper = $('emp-done');
+                if (activeWrapper && doneWrapper) {
+                    const orders = getOrders().filter(o => o.takenBy === currentUser.email || (o.status === 'pending' && !o.takenBy)).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    const active = orders.filter(o => o.status !== 'delivered');
+                    const done = orders.filter(o => o.status === 'delivered');
+                    
+                    const buttons = document.querySelectorAll('.tabs-row button');
+                    if (buttons.length >= 2) {
+                         buttons[0].textContent = `Active (${active.length})`;
+                         buttons[1].textContent = `Completed (${done.length})`;
+                    }
+                    
+                    if (active.length) activeWrapper.innerHTML = active.map(o => orderCardHTML(o, o.status === 'pending')).join('');
+                    else activeWrapper.innerHTML = '<div class="empty-state"><span class="es-icon">📭</span><p>No active orders.</p></div>';
+                    
+                    if (done.length) doneWrapper.innerHTML = done.map(o => orderCardHTML(o, false)).join('');
+                    else doneWrapper.innerHTML = '<div class="empty-state"><span class="es-icon">✨</span><p>No completed orders yet.</p></div>';
+                } else renderEmpOrders(m);
+            } else if (currentPage === 'myorders') {
+                const g = $('co-grid');
+                if (g) {
+                    const orders = getOrders().filter(o => o.customerEmail === currentUser.email).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; }
+                    else g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div><div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div><div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div><div class="oc-total">${fmt(o.total)}</div></div>`).join('');
+                } else renderCustomerOrders(m);
+            } else if (currentPage === 'admin' && typeof adminTab !== 'undefined' && adminTab === 'history') {
+                const w = $('ah-table-wrap');
+                if (w) {
+                    let orders = getOrders().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    window._allOrders = orders;
+                    const d = $('ah-date') ? $('ah-date').value : null;
+                    const fOrders = d ? orders.filter(o => dateKey(o.timestamp) === d) : orders;
+                    const h3 = document.querySelector('.section-header h3');
+                    if (h3) h3.textContent = `All Orders (${orders.length})`;
+                    renderHistoryTable(fOrders);
+                } else renderAdmin(m);
+            } else if (currentPage === 'confirmation') {
+                renderConfirmation(m);
+            }
+        }
+
         function refreshCurrentPage() {
             if (!currentUser || !currentPage) return;
 
@@ -1846,7 +1901,7 @@
 
             _ref.orders.on('value', function (snap) {
                 _dbOrders = _fbArr(snap);
-                if (_firebaseReady) refreshCurrentPage();
+                if (_firebaseReady) refreshOrdersUI();
             }, err => toast('Live updates blocked: ' + err.message, 'error'));
 
             _ref.products.on('value', function (snap) {
@@ -1964,7 +2019,7 @@
 <p style="color:var(--taupe);margin-bottom:24px">Your drink is being prepared with care</p>
 <div style="background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);text-align:left;max-width:460px;margin:0 auto">
 <div style="display:flex;justify-content:space-between;margin-bottom:16px"><span style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--amber)">${o.id}</span><span class="status-badge pending">Pending</span></div>
-${o.items.map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
+${(o.items || []).map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
 <div class="divider"></div>
 <div class="osi"><strong>Total</strong><strong style="color:var(--amber)">${fmt(o.total)}</strong></div>
 <p style="margin-top:12px;font-size:.85rem;color:var(--taupe)">📍 ${o.deliveryNote}</p>
@@ -1979,7 +2034,7 @@ ${o.items.map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</
             const g = $('co-grid');
             if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; return }
             g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
-<div class="oc-items">${o.items.map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div>
+<div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div>
 <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div>
 <div class="oc-total">${fmt(o.total)}</div></div>`).join('');
         }
@@ -2000,7 +2055,7 @@ ${o.items.map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</
             const ss = o.paymentMethod === 'card' && o.paymentDetails.screenshot ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.paymentDetails.screenshot.substring(0, 50)}','${o.id}')" title="View screenshot">` : '';
             return `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
 <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
-<div class="oc-items">${o.items.map(i => `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`).join('<br>')}</div>
+<div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`).join('<br>')}</div>
 <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash ֏' + Number(o.paymentDetails.billAmount || 0).toLocaleString() : 'Card'} ${ss}</span>${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}</div>
 <div class="oc-total">${fmt(o.total)}</div>
 ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''}</div>`;
@@ -2072,8 +2127,8 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
             <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
 
             <div class="oc-items">
-                ${o.items.map(i =>
-                `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${i.toppings.length ? ' + ' + i.toppings.join(', ') : ''}`
+                ${(o.items || []).map(i =>
+                `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`
             ).join('<br>')}
             </div>
 
@@ -2114,7 +2169,7 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
 
             saveOrders(orders);
             toast('Order ' + id + ' claimed!', 'success');
-            refreshCurrentPage();
+            refreshOrdersUI();
         }
 
         function markOrder(id, status) {
@@ -2126,7 +2181,7 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
             o.status = status;
             saveOrders(orders);
             toast('Order ' + id + ' marked as ' + status, 'success');
-            refreshCurrentPage();
+            refreshOrdersUI();
         }
 
         // ── EMPLOYEE: MY ORDERS ──
@@ -2217,7 +2272,7 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
             const w = $('ah-table-wrap');
             if (!orders.length) { w.innerHTML = '<div class="empty-state"><p>No orders found.</p></div>'; return }
             w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date & Time</th><th>Action</th></tr></thead><tbody>
-${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:.75rem">${o.customerEmail}</span></td><td>${o.items.map(i => i.emoji + ' ' + i.name + ' x' + i.quantity).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('x','${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:.8rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
+${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:.75rem">${o.customerEmail}</span></td><td>${(o.items || []).map(i => i.emoji + ' ' + i.name + ' x' + i.quantity).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('x','${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:.8rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
 </tbody></table></div>`;
         }
         function deleteOrder(id) { if (!confirm('Are you sure you want to delete this order entirely?')) return; let orders = getOrders().filter(o => o.id !== id); saveOrders(orders); toast('Order deleted forever', 'info'); renderAdminTab() }
