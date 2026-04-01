@@ -1493,8 +1493,8 @@
 
     <script>
         // ── DATA ──
-        const SYRUPS = ['Classic Milk', 'Taro', 'Brown Sugar', 'Strawberry', 'Matcha', 'Passion Fruit', 'Lychee Rose'];
-        const TOPPINGS = [{ name: 'Tapioca Pearls', emoji: '⚫' }, { name: 'Popping Boba', emoji: '🫧' }, { name: 'Coconut Jelly', emoji: '🥥' }, { name: 'Red Bean', emoji: '🫘' }, { name: 'Aloe Vera', emoji: '🌿' }];
+        const DEFAULT_SYRUPS = ['Classic Milk', 'Taro', 'Brown Sugar', 'Strawberry', 'Matcha', 'Passion Fruit', 'Lychee Rose'];
+        const DEFAULT_TOPPINGS = [{ name: 'Tapioca Pearls', emoji: '⚫' }, { name: 'Popping Boba', emoji: '🫧' }, { name: 'Coconut Jelly', emoji: '🥥' }, { name: 'Red Bean', emoji: '🫘' }, { name: 'Aloe Vera', emoji: '🌿' }];
         const DEFAULT_PRODUCTS = [
             { id: 1, name: 'Classic Milk Tea', emoji: '🧋', description: 'Rich and creamy traditional milk tea with a smooth, malty finish', price: 1200, tag: 'Popular' },
             { id: 2, name: 'Taro Dream', emoji: '🟣', description: 'Velvety taro with a hint of vanilla and natural sweetness', price: 1500, tag: 'Signature' },
@@ -1519,7 +1519,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const _fb = firebase.database();
-        const _ref = { users: _fb.ref('bolik_users'), orders: _fb.ref('bolik_orders'), products: _fb.ref('bolik_products') };
+        const _ref = { users: _fb.ref('bolik_users'), orders: _fb.ref('bolik_orders'), products: _fb.ref('bolik_products'), syrups: _fb.ref('bolik_syrups'), toppings: _fb.ref('bolik_toppings') };
 
         // ── STATE ──
         let cart = [];
@@ -1529,6 +1529,8 @@
         let _dbUsers = [];
         let _dbOrders = [];
         let _dbProducts = [];
+        let _dbSyrups = [];
+        let _dbToppings = [];
         let _firebaseReady = false;
 
         // ── HELPERS ──
@@ -1547,6 +1549,10 @@
         function saveOrders(o) { _dbOrders = [...o]; _ref.orders.set(o).catch(e => toast('Order DB Error: ' + e.message, 'error')); }
         function getProducts() { return _dbProducts.length ? _dbProducts : [...DEFAULT_PRODUCTS]; }
         function saveProducts(p) { _dbProducts = [...p]; _ref.products.set(p).catch(e => toast('Product DB Error: ' + e.message, 'error')); }
+        function getSyrups() { return _dbSyrups.length ? _dbSyrups : [...DEFAULT_SYRUPS]; }
+        function saveSyrups(s) { _dbSyrups = [...s]; _ref.syrups.set(s).catch(e => toast('Syrups DB Error: ' + e.message, 'error')); }
+        function getToppings() { return _dbToppings.length ? _dbToppings : [...DEFAULT_TOPPINGS]; }
+        function saveToppings(t) { _dbToppings = [...t]; _ref.toppings.set(t).catch(e => toast('Toppings DB Error: ' + e.message, 'error')); }
 
         function initSuperadmin() {
             const idx = _dbUsers.findIndex(x => x && x.email === SUPERADMIN_EMAIL);
@@ -1663,6 +1669,16 @@
                 _dbProducts = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
             }, err => console.warn('Products listener:', err.message));
+
+            _ref.syrups.on('value', function (snap) {
+                _dbSyrups = _fbArr(snap);
+                if (_firebaseReady) refreshCurrentPage();
+            }, err => console.warn('Syrups listener:', err.message));
+
+            _ref.toppings.on('value', function (snap) {
+                _dbToppings = _fbArr(snap);
+                if (_firebaseReady) refreshCurrentPage();
+            }, err => console.warn('Toppings listener:', err.message));
         }
 
         // ── MENU ──
@@ -1682,15 +1698,17 @@
         function openCustomize(pid) {
             const p = getProducts().find(x => x.id === pid); if (!p) return;
             const ov = $('modal-overlay'); ov.classList.remove('hidden');
-            let selSyrup = SYRUPS.find(s => p.name.toLowerCase().includes(s.toLowerCase().split(' ')[0])) || SYRUPS[0];
+            const currentSyrups = getSyrups();
+            const currentToppings = getToppings();
+            let selSyrup = currentSyrups.find(s => p.name.toLowerCase().includes(s.toLowerCase().split(' ')[0])) || currentSyrups[0];
             let selToppings = []; let qty = 1;
             function render() {
                 ov.innerHTML = `<div class="modal"><button class="modal-close" onclick="document.getElementById('modal-overlay').classList.add('hidden')">✕</button>
 <span style="font-size:2.5rem">${p.emoji}</span><h2 style="margin-top:8px">${p.name}</h2><p class="modal-sub">${fmt(p.price)} per drink</p>
 <div class="step-label"><span class="num">1</span>Choose Your Syrup</div>
-<div class="syrup-grid">${SYRUPS.map(s => `<div class="syrup-opt${s === selSyrup ? ' active' : ''}" onclick="window._cSyrup('${s}')">${s}</div>`).join('')}</div>
+<div class="syrup-grid">${currentSyrups.map(s => `<div class="syrup-opt${s === selSyrup ? ' active' : ''}" onclick="window._cSyrup('${s}')">${s}</div>`).join('')}</div>
 <div class="step-label"><span class="num">2</span>Choose Your Toppings</div>
-<div class="topping-grid">${TOPPINGS.map(t => `<div class="topping-opt${selToppings.includes(t.name) ? ' active' : ''}" onclick="window._cTop('${t.name}')">${t.emoji} ${t.name}</div>`).join('')}</div>
+<div class="topping-grid">${currentToppings.map(t => `<div class="topping-opt${selToppings.includes(t.name) ? ' active' : ''}" onclick="window._cTop('${t.name}')">${t.emoji} ${t.name}</div>`).join('')}</div>
 <div class="qty-row"><label>Quantity</label><div class="qty-controls"><button onclick="window._cQty(-1)">−</button><span>${qty}</span><button onclick="window._cQty(1)">+</button></div></div>
 <button class="btn-primary" onclick="window._cAdd()">Add to Cart — ${fmt(p.price * qty)}</button></div>`;
             }
@@ -1833,7 +1851,7 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
         let adminTab = 'history';
         function renderAdmin(m) {
             m.innerHTML = `<h1 class="page-title">Admin Panel</h1><p class="page-subtitle">Manage orders, products, accounts, and track revenue</p>
-<div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button></div>
+<div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'toppings' ? 'active' : ''}" onclick="adminNav('toppings')">🫧 Toppings</button><button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button></div>
 <div id="admin-content"></div>`;
             renderAdminTab();
         }
@@ -1843,6 +1861,8 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
             if (adminTab === 'history') renderAdminHistory(c);
             else if (adminTab === 'profit') renderAdminProfit(c);
             else if (adminTab === 'products') renderAdminProducts(c);
+            else if (adminTab === 'syrups') renderAdminSyrups(c);
+            else if (adminTab === 'toppings') renderAdminToppings(c);
             else if (adminTab === 'accounts') renderAdminAccounts(c);
         }
 
@@ -1855,10 +1875,11 @@ ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''
         function renderHistoryTable(orders) {
             const w = $('ah-table-wrap');
             if (!orders.length) { w.innerHTML = '<div class="empty-state"><p>No orders found.</p></div>'; return }
-            w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date & Time</th></tr></thead><tbody>
-${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:.75rem">${o.customerEmail}</span></td><td>${o.items.map(i => i.emoji + ' ' + i.name + ' x' + i.quantity).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('x','${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:.8rem">${fmtDate(o.timestamp)}</td></tr>`).join('')}
+            w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date & Time</th><th>Action</th></tr></thead><tbody>
+${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:.75rem">${o.customerEmail}</span></td><td>${o.items.map(i => i.emoji + ' ' + i.name + ' x' + i.quantity).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('x','${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:.8rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
 </tbody></table></div>`;
         }
+        function deleteOrder(id) { if(!confirm('Are you sure you want to delete this order entirely?')) return; let orders = getOrders().filter(o => o.id !== id); saveOrders(orders); toast('Order deleted forever', 'info'); renderAdminTab() }
 
         function renderAdminProfit(c) {
             const orders = getOrders().filter(o => o.status === 'delivered');
@@ -1900,6 +1921,47 @@ ${rows.map(r => `<tr><td>${new Date(r.date + 'T00:00:00').toLocaleDateString('en
         }
         function deleteProduct(id) { const products = getProducts().filter(p => p.id !== id); saveProducts(products); toast('Product removed', 'info'); renderAdminTab() }
 
+        function renderAdminSyrups(c) {
+            const syrups = getSyrups();
+            c.innerHTML = `<div class="admin-form"><h3>Add New Syrup</h3>
+<div class="form-group"><label>Syrup Name</label><input id="as-name" placeholder="e.g. Vanilla Bean"></div>
+<div class="form-error" id="as-err"></div>
+<button class="btn-primary" onclick="addSyrup()">Add Syrup</button></div>
+<h3 style="margin-bottom:16px">Current Syrups (${syrups.length})</h3>
+<div class="orders-grid">${syrups.map((s, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
+<strong>${s}</strong><button class="btn-danger btn-sm" onclick="deleteSyrup(${idx})">Delete</button></div>`).join('')}</div>`;
+        }
+        function addSyrup() {
+            clearErrs(); const name = $('as-name').value.trim();
+            if (!name) { showErr('as-err', 'Syrup name is required'); return }
+            const syrups = getSyrups();
+            if (syrups.includes(name)) { showErr('as-err', 'Syrup already exists'); return }
+            syrups.push(name); saveSyrups(syrups); toast(name + ' added', 'success'); renderAdminTab();
+        }
+        function deleteSyrup(idx) { const syrups = getSyrups(); syrups.splice(idx, 1); saveSyrups(syrups); toast('Syrup removed', 'info'); renderAdminTab() }
+
+        function renderAdminToppings(c) {
+            const toppings = getToppings();
+            c.innerHTML = `<div class="admin-form"><h3>Add New Topping</h3>
+<div class="form-row">
+<div class="form-group"><label>Emoji</label><input id="at-emoji" placeholder="e.g. 🍒" maxlength="4"></div>
+<div class="form-group"><label>Topping Name</label><input id="at-name" placeholder="e.g. Cherry"></div>
+</div>
+<div class="form-error" id="at-err"></div>
+<button class="btn-primary" onclick="addTopping()">Add Topping</button></div>
+<h3 style="margin-bottom:16px">Current Toppings (${toppings.length})</h3>
+<div class="orders-grid">${toppings.map((t, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
+<span><span style="font-size:1.5rem;margin-right:8px">${t.emoji}</span><strong>${t.name}</strong></span><button class="btn-danger btn-sm" onclick="deleteTopping(${idx})">Delete</button></div>`).join('')}</div>`;
+        }
+        function addTopping() {
+            clearErrs(); const emoji = $('at-emoji').value.trim(), name = $('at-name').value.trim();
+            if (!emoji || !name) { showErr('at-err', 'All fields are required'); return }
+            const toppings = getToppings();
+            if (toppings.find(t => t.name.toLowerCase() === name.toLowerCase())) { showErr('at-err', 'Topping already exists'); return }
+            toppings.push({ emoji, name }); saveToppings(toppings); toast(name + ' added', 'success'); renderAdminTab();
+        }
+        function deleteTopping(idx) { const toppings = getToppings(); toppings.splice(idx, 1); saveToppings(toppings); toast('Topping removed', 'info'); renderAdminTab() }
+
         function renderAdminAccounts(c) {
             const users = getUsers();
             c.innerHTML = `<h3 style="margin-bottom:16px">Registered Accounts (${users.length})</h3>
@@ -1932,10 +1994,18 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
                 return _ref.products.once('value');
             }).then(snap => {
                 _dbProducts = _fbArr(snap);
+                return _ref.syrups.once('value');
+            }).then(snap => {
+                _dbSyrups = _fbArr(snap);
+                return _ref.toppings.once('value');
+            }).then(snap => {
+                _dbToppings = _fbArr(snap);
 
                 // Init data if first run
                 initSuperadmin();
                 if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
+                if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
+                if (!_dbToppings.length) saveToppings([...DEFAULT_TOPPINGS]);
 
                 _firebaseReady = true;
 
