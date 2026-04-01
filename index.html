@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bolik — Handcrafted Bubble Tea at UWC Dilijan</title>
     <meta name="description"
-        content="Order handcrafted bubble tea for campus delivery at UWC Dilijan. Customize your drink, choose your toppings, and enjoy.">
+        content="Order handcrafted bubble tea for campus delivery at UWC Dilijan. Customize your drink, choose your bubbles, and enjoy.">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
         rel="stylesheet">
@@ -742,7 +742,7 @@
         }
 
         .syrup-grid,
-        .topping-grid {
+        .bubble-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 8px;
@@ -750,7 +750,7 @@
         }
 
         .syrup-opt,
-        .topping-opt {
+        .bubble-opt {
             padding: 12px;
             border: 2px solid #e0d5c7;
             border-radius: 12px;
@@ -762,7 +762,7 @@
         }
 
         .syrup-opt:hover,
-        .topping-opt:hover {
+        .bubble-opt:hover {
             border-color: var(--amber)
         }
 
@@ -772,7 +772,7 @@
             color: var(--amber)
         }
 
-        .topping-opt.active {
+        .bubble-opt.active {
             border-color: var(--gold);
             background: rgba(232, 184, 75, .1);
             color: var(--dark)
@@ -1619,7 +1619,7 @@
             }
 
             .syrup-grid,
-            .topping-grid {
+            .bubble-grid {
                 grid-template-columns: repeat(auto-fill, minmax(110px, 1fr))
             }
         }
@@ -1766,7 +1766,7 @@
     <script>
         // ── DATA ──
         const DEFAULT_SYRUPS = ['Classic Milk', 'Taro', 'Brown Sugar', 'Strawberry', 'Matcha', 'Passion Fruit', 'Lychee Rose'];
-        const DEFAULT_TOPPINGS = [{ name: 'Tapioca Pearls', emoji: '⚫' }, { name: 'Popping Boba', emoji: '🫧' }, { name: 'Coconut Jelly', emoji: '🥥' }, { name: 'Red Bean', emoji: '🫘' }, { name: 'Aloe Vera', emoji: '🌿' }];
+        const DEFAULT_BUBBLES = [{ name: 'Tapioca Pearls', emoji: '⚫' }, { name: 'Popping Boba', emoji: '🫧' }, { name: 'Coconut Jelly', emoji: '🥥' }, { name: 'Red Bean', emoji: '🫘' }, { name: 'Aloe Vera', emoji: '🌿' }];
         const DEFAULT_PRODUCTS = [
             { id: 1, name: 'Classic Milk Tea', emoji: '🧋', description: 'Rich and creamy traditional milk tea with a smooth, malty finish', price: 1200, tag: 'Popular' },
             { id: 2, name: 'Taro Dream', emoji: '🟣', description: 'Velvety taro with a hint of vanilla and natural sweetness', price: 1500, tag: 'Signature' },
@@ -1791,7 +1791,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const _fb = firebase.database();
-        const _ref = { users: _fb.ref('bolik_users'), orders: _fb.ref('bolik_orders'), products: _fb.ref('bolik_products'), syrups: _fb.ref('bolik_syrups'), toppings: _fb.ref('bolik_toppings') };
+        const _ref = { users: _fb.ref('bolik_users'), orders: _fb.ref('bolik_orders'), products: _fb.ref('bolik_products'), syrups: _fb.ref('bolik_syrups'), bubbles: _fb.ref('bolik_bubbles') };
 
         // ── STATE ──
         let cart = [];
@@ -1802,7 +1802,7 @@
         let _dbOrders = [];
         let _dbProducts = [];
         let _dbSyrups = [];
-        let _dbToppings = [];
+        let _dbBubbles = [];
         let _firebaseReady = false;
 
         // ── HELPERS ──
@@ -1814,6 +1814,7 @@
         const dateKey = d => new Date(d).toISOString().split('T')[0];
         function _fbArr(snap) { const v = snap.val(); if (!v) return []; return Array.isArray(v) ? v.filter(Boolean) : Object.values(v); }
         function validEmail(email) { return email.endsWith('@uwcdilijan.am') || email.endsWith('@student.uwcdilijan.am'); }
+        const _itemDetail = i => { let d = i.syrup; if (i.bubbles && i.bubbles.length) d += ', ' + i.bubbles.join(', '); if (i.bubbleAmount === 'extra' || i.extraBubbles) d += ' (Extra Bubbles)'; return d; };
 
         // ── DATA (Firebase-backed with local cache) ──
         function getUsers() { return _dbUsers; }
@@ -1824,8 +1825,8 @@
         function saveProducts(p) { _dbProducts = [...p]; _ref.products.set(p).catch(e => toast('Product DB Error: ' + e.message, 'error')); }
         function getSyrups() { return _dbSyrups.length ? _dbSyrups : [...DEFAULT_SYRUPS]; }
         function saveSyrups(s) { _dbSyrups = [...s]; _ref.syrups.set(s).catch(e => toast('Syrups DB Error: ' + e.message, 'error')); }
-        function getToppings() { return _dbToppings.length ? _dbToppings : [...DEFAULT_TOPPINGS]; }
-        function saveToppings(t) { _dbToppings = [...t]; _ref.toppings.set(t).catch(e => toast('Toppings DB Error: ' + e.message, 'error')); }
+        function getBubbles() { return _dbBubbles.length ? _dbBubbles : [...DEFAULT_BUBBLES]; }
+        function saveBubbles(t) { _dbBubbles = [...t]; _ref.bubbles.set(t).catch(e => toast('Bubbles DB Error: ' + e.message, 'error')); }
 
         function initSuperadmin() {
             const idx = _dbUsers.findIndex(x => x && x.email === SUPERADMIN_EMAIL);
@@ -1980,9 +1981,7 @@
                 <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
 
                 <div class="oc-items">
-                    ${(o.items || []).map(i =>
-                `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`
-            ).join('<br>')}
+                    ${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}
                 </div>
 
                 <div class="oc-meta">
@@ -2137,7 +2136,7 @@
                 if (g) {
                     const orders = getOrders().filter(o => o.customerEmail === currentUser.email).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; }
-                    else g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div><div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div><div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div><div class="oc-total">${fmt(o.total)}</div></div>`).join('');
+                    else g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div><div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${_itemDetail(i)})`).join('<br>')}</div><div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div><div class="oc-total">${fmt(o.total)}</div></div>`).join('');
                 } else renderCustomerOrders(m);
             } else if (currentPage === 'admin' && typeof adminTab !== 'undefined' && adminTab === 'history') {
                 const w = $('ah-table-wrap');
@@ -2183,12 +2182,17 @@
                 _dbProducts = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
             }, err => console.warn('Products listener:', err.message));
+
+            _ref.bubbles.on('value', function (snap) {
+                _dbBubbles = _fbArr(snap);
+                if (_firebaseReady) refreshCurrentPage();
+            }, err => console.warn('Bubbles listener:', err.message));
         }
 
         // ── MENU ──
         function renderMenu(m) {
             const products = getProducts();
-            m.innerHTML = '<h1 class="page-title">Our Menu</h1><p class="page-subtitle">Handcrafted bubble teas made fresh for you — choose your flavor, pick your toppings, and we\'ll deliver to your door.</p><div class="menu-grid" id="menu-grid"></div>';
+            m.innerHTML = '<h1 class="page-title">Our Menu</h1><p class="page-subtitle">Handcrafted bubble teas made fresh for you — choose your flavor, pick your bubbles, and we\'ll deliver to your door.</p><div class="menu-grid" id="menu-grid"></div>';
             const g = $('menu-grid');
             if (!products.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">🧋</span><p>No drinks available at the moment. Check back soon!</p></div>'; return }
             products.forEach((p, i) => {
@@ -2203,23 +2207,43 @@
             const p = getProducts().find(x => x.id === pid); if (!p) return;
             const ov = $('modal-overlay'); ov.classList.remove('hidden');
             const currentSyrups = getSyrups();
-            const currentToppings = getToppings();
+            const currentBubbles = getBubbles();
             let selSyrup = currentSyrups.find(s => p.name.toLowerCase().includes(s.toLowerCase().split(' ')[0])) || currentSyrups[0];
-            let selToppings = []; let qty = 1;
+            let selBubbles = []; let bubbleAmount = 'standard'; let qty = 1;
             function render() {
+                const totalPrice = (p.price + (bubbleAmount === 'extra' ? 400 : 0)) * qty;
                 ov.innerHTML = `<div class="modal"><button class="modal-close" onclick="document.getElementById('modal-overlay').classList.add('hidden')">✕</button>
     <span style="font-size:2.5rem">${p.emoji}</span><h2 style="margin-top:8px">${p.name}</h2><p class="modal-sub">${fmt(p.price)} per drink</p>
     <div class="step-label"><span class="num">1</span>Choose Your Syrup</div>
     <div class="syrup-grid">${currentSyrups.map(s => `<div class="syrup-opt${s === selSyrup ? ' active' : ''}" onclick="window._cSyrup('${s}')">${s}</div>`).join('')}</div>
-    <div class="step-label"><span class="num">2</span>Choose Your Toppings</div>
-    <div class="topping-grid">${currentToppings.map(t => `<div class="topping-opt${selToppings.includes(t.name) ? ' active' : ''}" onclick="window._cTop('${t.name}')">${t.emoji} ${t.name}</div>`).join('')}</div>
+    <div class="step-label"><span class="num">2</span>Choose Your Bubbles</div>
+    <div class="bubble-grid">${currentBubbles.map(t => `<div class="bubble-opt${selBubbles.includes(t.name) ? ' active' : ''}" onclick="window._cBub('${t.name}')">${t.emoji} ${t.name}</div>`).join('')}</div>
+    <div class="step-label"><span class="num">3</span>Bubbles Amount</div>
+    <div class="syrup-grid">
+        <div class="syrup-opt${bubbleAmount === 'standard' ? ' active' : ''}" onclick="window._cAmount('standard')">Standard</div>
+        <div class="syrup-opt${bubbleAmount === 'extra' ? ' active' : ''}" onclick="window._cAmount('extra')">Extra (+${fmt(400)})</div>
+    </div>
     <div class="qty-row"><label>Quantity</label><div class="qty-controls"><button onclick="window._cQty(-1)">−</button><span>${qty}</span><button onclick="window._cQty(1)">+</button></div></div>
-    <button class="btn-primary" onclick="window._cAdd()">Add to Cart — ${fmt(p.price * qty)}</button></div>`;
+    <button class="btn-primary" onclick="window._cAdd()">Add to Cart — ${fmt(totalPrice)}</button></div>`;
             }
             window._cSyrup = s => { selSyrup = s; render() };
-            window._cTop = t => { const i = selToppings.indexOf(t); i >= 0 ? selToppings.splice(i, 1) : selToppings.push(t); render() };
+            window._cBub = t => { const i = selBubbles.indexOf(t); i >= 0 ? selBubbles.splice(i, 1) : selBubbles.push(t); render() };
+            window._cAmount = a => { bubbleAmount = a; render() };
             window._cQty = d => { qty = Math.max(1, qty + d); render() };
-            window._cAdd = () => { cart.push({ productId: p.id, productName: p.name, emoji: p.emoji, syrup: selSyrup, toppings: [...selToppings], quantity: qty, unitPrice: p.price }); updateCartBadge(); ov.classList.add('hidden'); toast(p.name + ' added to cart', 'success') };
+            window._cAdd = () => {
+                const finalUnitPrice = p.price + (bubbleAmount === 'extra' ? 400 : 0);
+                cart.push({
+                    productId: p.id,
+                    productName: p.name,
+                    emoji: p.emoji,
+                    syrup: selSyrup,
+                    bubbles: [...selBubbles],
+                    bubbleAmount: bubbleAmount,
+                    quantity: qty,
+                    unitPrice: finalUnitPrice
+                });
+                updateCartBadge(); ov.classList.add('hidden'); toast(p.name + ' added to cart', 'success')
+            };
             render();
         }
 
@@ -2230,7 +2254,7 @@
         function renderCartItems() {
             const ci = $('cart-items'), cf = $('cart-footer');
             if (!cart.length) { ci.innerHTML = '<div class="cart-empty"><span class="ce-icon">🛒</span><p>Your cart is empty.<br>Add something delicious!</p></div>'; cf.innerHTML = ''; return }
-            ci.innerHTML = cart.map((item, i) => `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${item.syrup} syrup${(item.toppings && item.toppings.length) ? ' · ' + item.toppings.join(', ') : ''}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`).join('');
+            ci.innerHTML = cart.map((item, i) => `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${_itemDetail(item)}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`).join('');
             const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
             cf.innerHTML = `<div class="cart-total"><span>Total</span><span class="amount">${fmt(total)}</span></div><button class="btn-primary" onclick="closeCart();navigate('checkout')">Proceed to Checkout</button>`;
         }
@@ -2243,7 +2267,7 @@
             if (!cart.length) { navigate('menu'); toast('Your cart is empty', 'error'); return }
             const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0); payScreenshot = null; cashAmount = ''; payMethod = 'cash';
             m.innerHTML = `<div class="checkout-card"><h2>Checkout</h2>
-    <div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${i.productName} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
+    <div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${i.productName} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${_itemDetail(i)})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
     <div class="divider"></div><div class="osi"><strong>Total</strong><strong style="color:var(--amber);font-family:'Playfair Display',serif;font-size:1.2rem">${fmt(total)}</strong></div></div>
     <div class="form-group"><label>Delivery Location</label><input id="co-note" placeholder="e.g. Library Room 2, Dorm 14" required><div class="form-error" id="co-note-err"></div></div>
     <div class="form-group"><label>Payment Method</label>
@@ -2277,7 +2301,7 @@
             if (payMethod === 'card' && !payScreenshot) { showErr('co-pay-err', 'Please upload a payment screenshot'); return }
             const order = {
                 id: genId(), customerEmail: currentUser.email, customerName: currentUser.name,
-                items: cart.map(i => ({ name: i.productName, emoji: i.emoji, syrup: i.syrup, toppings: [...i.toppings], quantity: i.quantity, unitPrice: i.unitPrice })),
+                items: cart.map(i => ({ name: i.productName, emoji: i.emoji, syrup: i.syrup, bubbles: [...i.bubbles], bubbleAmount: i.bubbleAmount, quantity: i.quantity, unitPrice: i.unitPrice })),
                 total, deliveryNote: note, paymentMethod: payMethod,
                 paymentDetails: payMethod === 'cash' ? { billAmount: Number(cashAmount) } : { screenshot: payScreenshot },
                 status: 'pending', timestamp: new Date().toISOString(), takenBy: null
@@ -2309,7 +2333,7 @@
             const g = $('co-grid');
             if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; return }
             g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
-    <div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div>
+    <div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${_itemDetail(i)})`).join('<br>')}</div>
     <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div>
     <div class="oc-total">${fmt(o.total)}</div></div>`).join('');
         }
@@ -2330,7 +2354,7 @@
             const ss = o.paymentMethod === 'card' && o.paymentDetails.screenshot ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.paymentDetails.screenshot.substring(0, 50)}','${o.id}')" title="View screenshot">` : '';
             return `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
     <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
-    <div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`).join('<br>')}</div>
+    <div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}</div>
     <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash ֏' + Number(o.paymentDetails.billAmount || 0).toLocaleString() : 'Card'} ${ss}</span>${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}</div>
     <div class="oc-total">${fmt(o.total)}</div>
     ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''}</div>`;
@@ -2402,8 +2426,7 @@
                 <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
 
                 <div class="oc-items">
-                    ${(o.items || []).map(i =>
-                `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`
+                    ${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}
             ).join('<br>')}
                 </div>
 
@@ -2522,7 +2545,7 @@
         let adminTab = 'history';
         function renderAdmin(m) {
             m.innerHTML = `<h1 class="page-title">Admin Panel</h1><p class="page-subtitle">Manage orders, products, accounts, and track revenue</p>
-    <div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'toppings' ? 'active' : ''}" onclick="adminNav('toppings')">🫧 Toppings</button>${currentUser.role === 'superadmin' ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}</div>
+    <div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'bubbles' ? 'active' : ''}" onclick="adminNav('bubbles')">🫧 Bubbles</button>${currentUser.role === 'superadmin' ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}</div>
     <div id="admin-content"></div>`;
             renderAdminTab();
         }
@@ -2534,7 +2557,7 @@
             else if (adminTab === 'profit') renderAdminProfit(c);
             else if (adminTab === 'products') renderAdminProducts(c);
             else if (adminTab === 'syrups') renderAdminSyrups(c);
-            else if (adminTab === 'toppings') renderAdminToppings(c);
+            else if (adminTab === 'bubbles') renderAdminBubbles(c);
             else if (adminTab === 'accounts') renderAdminAccounts(c);
         }
 
@@ -2612,27 +2635,27 @@
         }
         function deleteSyrup(idx) { const syrups = getSyrups(); syrups.splice(idx, 1); saveSyrups(syrups); toast('Syrup removed', 'info'); renderAdminTab() }
 
-        function renderAdminToppings(c) {
-            const toppings = getToppings();
-            c.innerHTML = `<div class="admin-form"><h3>Add New Topping</h3>
+        function renderAdminBubbles(c) {
+            const bubbles = getBubbles();
+            c.innerHTML = `<div class="admin-form"><h3>Add New Bubble Type</h3>
     <div class="form-row">
-    <div class="form-group"><label>Emoji</label><input id="at-emoji" placeholder="e.g. 🍒" maxlength="4"></div>
-    <div class="form-group"><label>Topping Name</label><input id="at-name" placeholder="e.g. Cherry"></div>
+    <div class="form-group"><label>Emoji</label><input id="ab-emoji" placeholder="e.g. ⚫" maxlength="4"></div>
+    <div class="form-group"><label>Bubble Name</label><input id="ab-name" placeholder="e.g. Tapioca"></div>
     </div>
-    <div class="form-error" id="at-err"></div>
-    <button class="btn-primary" onclick="addTopping()">Add Topping</button></div>
-    <h3 style="margin-bottom:16px">Current Toppings (${toppings.length})</h3>
-    <div class="orders-grid">${toppings.map((t, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
-    <span><span style="font-size:1.5rem;margin-right:8px">${t.emoji}</span><strong>${t.name}</strong></span><button class="btn-danger btn-sm" onclick="deleteTopping(${idx})">Delete</button></div>`).join('')}</div>`;
+    <div class="form-error" id="ab-err"></div>
+    <button class="btn-primary" onclick="addBubble()">Add Bubble</button></div>
+    <h3 style="margin-bottom:16px">Current Bubbles (${bubbles.length})</h3>
+    <div class="orders-grid">${bubbles.map((t, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
+    <span><span style="font-size:1.5rem;margin-right:8px">${t.emoji}</span><strong>${t.name}</strong></span><button class="btn-danger btn-sm" onclick="deleteBubble(${idx})">Delete</button></div>`).join('')}</div>`;
         }
-        function addTopping() {
-            clearErrs(); const emoji = $('at-emoji').value.trim(), name = $('at-name').value.trim();
-            if (!emoji || !name) { showErr('at-err', 'All fields are required'); return }
-            const toppings = getToppings();
-            if (toppings.find(t => t.name.toLowerCase() === name.toLowerCase())) { showErr('at-err', 'Topping already exists'); return }
-            toppings.push({ emoji, name }); saveToppings(toppings); toast(name + ' added', 'success'); renderAdminTab();
+        function addBubble() {
+            clearErrs(); const name = $('ab-name').value.trim(), emoji = $('ab-emoji').value.trim() || '⚫';
+            if (!name) { showErr('ab-err', 'Bubble name is required'); return }
+            const bubbles = getBubbles();
+            if (bubbles.find(t => t.name.toLowerCase() === name.toLowerCase())) { showErr('ab-err', 'Bubble already exists'); return }
+            bubbles.push({ emoji, name }); saveBubbles(bubbles); toast(name + ' added', 'success'); renderAdminTab();
         }
-        function deleteTopping(idx) { const toppings = getToppings(); toppings.splice(idx, 1); saveToppings(toppings); toast('Topping removed', 'info'); renderAdminTab() }
+        function deleteBubble(idx) { const bubbles = getBubbles(); bubbles.splice(idx, 1); saveBubbles(bubbles); toast('Bubble removed', 'info'); renderAdminTab() }
 
         function renderAdminAccounts(c) {
             if (currentUser.role !== 'superadmin') return;
@@ -2693,15 +2716,15 @@
                 return _ref.syrups.once('value');
             }).then(snap => {
                 _dbSyrups = _fbArr(snap);
-                return _ref.toppings.once('value');
+                return _ref.bubbles.once('value');
             }).then(snap => {
-                _dbToppings = _fbArr(snap);
+                _dbBubbles = _fbArr(snap);
 
                 // Init data if first run
                 initSuperadmin();
                 if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
                 if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
-                if (!_dbToppings.length) saveToppings([...DEFAULT_TOPPINGS]);
+                if (!_dbBubbles.length) saveBubbles([...DEFAULT_BUBBLES]);
 
                 _firebaseReady = true;
 
