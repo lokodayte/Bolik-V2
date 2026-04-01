@@ -1927,8 +1927,10 @@
         function renderPayDetails() {
             const d = $('pay-details');
             if (payMethod === 'cash') {
-                d.innerHTML = `<div class="form-group"><label>Bill amount you will hand over</label><input type="number" id="co-cash" placeholder="e.g. 2000" value="${cashAmount}" oninput="cashAmount=this.value">
-<div class="cash-amounts"><button type="button" onclick="setCash(500)">֏500</button><button type="button" onclick="setCash(1000)">֏1,000</button><button type="button" onclick="setCash(2000)">֏2,000</button><button type="button" onclick="setCash(5000)">֏5,000</button><button type="button" onclick="setCash(10000)">֏10,000</button></div></div>`;
+                const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+                const mkBtn = (val) => `<button type="button" ${val < total ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="setCash(${val})">֏${val.toLocaleString()}</button>`;
+                d.innerHTML = `<div class="form-group"><label>Bill amount you will hand over</label><input type="number" id="co-cash" placeholder="e.g. ${total}" value="${cashAmount}" oninput="cashAmount=this.value" min="${total}">
+<div class="cash-amounts">${mkBtn(500)}${mkBtn(1000)}${mkBtn(2000)}${mkBtn(5000)}${mkBtn(10000)}</div></div>`;
             } else {
                 d.innerHTML = `<div class="card-display">${CARD_NUMBER}</div><p style="text-align:center;color:var(--taupe);font-size:.85rem;margin-bottom:16px">Transfer the total and upload a screenshot as proof</p>
 <div class="upload-area" id="upload-area"><input type="file" accept="image/*" onchange="handleScreenshot(event)"><span id="upload-text">📎 Click or drag to upload screenshot</span><br><img id="upload-preview" class="preview" style="display:none"></div>`;
@@ -1940,9 +1942,9 @@
         function placeOrder() {
             clearErrs(); const note = $('co-note').value.trim();
             if (!note) { showErr('co-note-err', 'Please enter a delivery location'); return }
-            if (payMethod === 'cash' && (!cashAmount || Number(cashAmount) <= 0)) { showErr('co-pay-err', 'Please enter the bill amount you\'ll pay with'); return }
-            if (payMethod === 'card' && !payScreenshot) { showErr('co-pay-err', 'Please upload a payment screenshot'); return }
             const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+            if (payMethod === 'cash' && (!cashAmount || Number(cashAmount) < total)) { showErr('co-pay-err', 'Please enter a bill amount of at least ֏' + total.toLocaleString()); return }
+            if (payMethod === 'card' && !payScreenshot) { showErr('co-pay-err', 'Please upload a payment screenshot'); return }
             const order = {
                 id: genId(), customerEmail: currentUser.email, customerName: currentUser.name,
                 items: cart.map(i => ({ name: i.productName, emoji: i.emoji, syrup: i.syrup, toppings: [...i.toppings], quantity: i.quantity, unitPrice: i.unitPrice })),
