@@ -217,13 +217,13 @@
             right: -10%;
             width: 60vw;
             height: 60vw;
-            background: radial-gradient(circle, rgba(201,133,10,0.3) 0%, rgba(201,133,10,0) 70%);
+            background: radial-gradient(circle, rgba(201, 133, 10, 0.3) 0%, rgba(201, 133, 10, 0) 70%);
             border-radius: 50%;
             filter: blur(60px);
             z-index: 1;
             pointer-events: none;
         }
-        
+
         #landing-page::after {
             content: '';
             position: absolute;
@@ -231,7 +231,7 @@
             left: -10%;
             width: 50vw;
             height: 50vw;
-            background: radial-gradient(circle, rgba(232,184,75,0.2) 0%, rgba(26,15,6,0) 70%);
+            background: radial-gradient(circle, rgba(232, 184, 75, 0.2) 0%, rgba(26, 15, 6, 0) 70%);
             border-radius: 50%;
             filter: blur(40px);
             z-index: 1;
@@ -267,8 +267,10 @@
             font-weight: 700;
             color: var(--gold);
         }
-        
-        .lp-logo span { color: var(--surface); }
+
+        .lp-logo span {
+            color: var(--surface);
+        }
 
         .btn-enter {
             background: rgba(255, 255, 255, 0.1);
@@ -286,7 +288,7 @@
         .btn-enter:hover {
             background: var(--amber);
             border-color: var(--amber);
-            box-shadow: 0 4px 15px rgba(201,133,10,0.4);
+            box-shadow: 0 4px 15px rgba(201, 133, 10, 0.4);
             transform: translateY(-2px);
         }
 
@@ -305,7 +307,7 @@
             line-height: 1.1;
             margin-bottom: 24px;
             color: var(--surface);
-            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .lp-hero h1 span {
@@ -331,7 +333,7 @@
             max-width: 1000px;
             animation: fadeIn 1s ease 0.6s both;
         }
-        
+
         .lp-leaders h3 {
             font-family: 'DM Sans', sans-serif;
             text-transform: uppercase;
@@ -365,7 +367,7 @@
         .leader-card:hover {
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(201,133,10,0.3);
+            border-color: rgba(201, 133, 10, 0.3);
         }
 
         .leader-avatar {
@@ -379,7 +381,7 @@
             justify-content: center;
             font-size: 2.2rem;
             color: var(--dark);
-            box-shadow: inset 0 0 0 3px rgba(26,15,6,0.3);
+            box-shadow: inset 0 0 0 3px rgba(26, 15, 6, 0.3);
         }
 
         .leader-card h4 {
@@ -395,9 +397,39 @@
             font-weight: 500;
         }
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
 
         /* AUTH */
         #auth-page {
@@ -1617,6 +1649,38 @@
 <body>
     <div id="toast-container"></div>
 
+    <!-- ── LANDING PAGE ── -->
+    <div id="landing-page">
+        <div class="lp-content">
+            <header class="lp-header">
+                <div class="lp-logo">🧋 B<span>o</span>lik</div>
+                <button class="btn-enter" onclick="goToAuth()">Login / Sign Up</button>
+            </header>
+
+            <main class="lp-hero">
+                <h1>Taste the <span>Luxury</span><br>of Everyday</h1>
+                <p>Welcome to Bolik, the premium handcrafted bubble tea experience delivered directly to your door at UWC Dilijan. We blend tradition with modern taste.</p>
+            </main>
+
+            <section class="lp-leaders">
+                <h3>Meet the Leaders</h3>
+                <div class="leaders-grid">
+                    <div class="leader-card">
+                        <div class="leader-avatar">😎</div>
+                        <h4>Boris Sargsyan</h4>
+                        <p>Founder & Visionary</p>
+                    </div>
+                    <div class="leader-card">
+                        <div class="leader-avatar">✨</div>
+                        <h4>Elina</h4>
+                        <p>Co-Founder</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ── AUTH LAYER ── -->
     <div id="auth-page">
         <div class="auth-card">
             <div class="auth-header">
@@ -1759,13 +1823,13 @@
         function initSuperadmin() {
             const idx = _dbUsers.findIndex(x => x && x.email === SUPERADMIN_EMAIL);
             if (idx === -1) {
-                _dbUsers.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Babken Sargsyan', role: 'superadmin' });
+                _dbUsers.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Boris Sargsyan', role: 'superadmin' });
                 saveUsers(_dbUsers);
             } else {
                 let changed = false;
                 if (_dbUsers[idx].role !== 'superadmin') { _dbUsers[idx].role = 'superadmin'; changed = true; }
                 if (_dbUsers[idx].password !== 'admin123') { _dbUsers[idx].password = 'admin123'; changed = true; }
-                if (!(_dbUsers[idx].name)) { _dbUsers[idx].name = 'Babken Sargsyan'; changed = true; }
+                if (!(_dbUsers[idx].name)) { _dbUsers[idx].name = 'Boris Sargsyan'; changed = true; }
                 if (changed) saveUsers(_dbUsers);
             }
         }
