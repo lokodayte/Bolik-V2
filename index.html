@@ -1872,7 +1872,7 @@
             ev.preventDefault(); clearErrs();
             const name = $('reg-name').value.trim(), email = $('reg-email').value.trim().toLowerCase(), pass = $('reg-pass').value, pass2 = $('reg-pass2').value;
             if (!name) { showErr('reg-name-err', 'Name is required'); return }
-            //if(!validEmail(email)){showErr('reg-email-err','Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');return}
+            if(!validEmail(email)){showErr('reg-email-err','Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');return}
             if (pass.length < 4) { showErr('reg-pass-err', 'Password must be at least 4 characters'); return }
             if (pass !== pass2) { showErr('reg-pass2-err', 'Passwords do not match'); return }
             let users = getUsers();
