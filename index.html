@@ -1666,14 +1666,19 @@
                 <h3>Meet the Leaders</h3>
                 <div class="leaders-grid">
                     <div class="leader-card">
-                        <div class="leader-avatar">😎</div>
+                        <div class="leader-avatar">💻</div>
                         <h4>Boris Sargsyan</h4>
-                        <p>Founder & Visionary</p>
+                        <p>Lead Developer</p>
                     </div>
                     <div class="leader-card">
-                        <div class="leader-avatar">✨</div>
-                        <h4>Elina</h4>
-                        <p>Co-Founder</p>
+                        <div class="leader-avatar">👑</div>
+                        <h4>Elina Mosoyan</h4>
+                        <p>Founder & Leader</p>
+                    </div>
+                    <div class="leader-card">
+                        <div class="leader-avatar">🎯</div>
+                        <h4>Matteo Saad</h4>
+                        <p>CAS Leader</p>
                     </div>
                 </div>
             </section>
@@ -2660,9 +2665,15 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>
 
         // ── INIT ──
         document.addEventListener('DOMContentLoaded', () => {
-            // Show landing page state initially
-            $('landing-page').style.display = 'flex';
-            $('auth-page').style.display = 'none';
+            // If user was already logged in, skip landing page entirely and show a silent loading screen
+            const existingSession = ls('bolik_session');
+            if (existingSession) {
+                $('landing-page').style.display = 'none';
+                $('auth-page').style.display = 'none';
+            } else {
+                $('landing-page').style.display = 'flex';
+                $('auth-page').style.display = 'none';
+            }
 
             // Set up real-time listeners
             setupFirebaseListeners();
