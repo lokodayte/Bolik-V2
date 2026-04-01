@@ -1542,12 +1542,25 @@
 
         // ── DATA (Firebase-backed with local cache) ──
         function getUsers() { return _dbUsers; }
-        function saveUsers(u) { _dbUsers = [...u]; _ref.users.set(u); }
+        function saveUsers(u) { _dbUsers = [...u]; _ref.users.set(u).catch(e => toast('User DB Error: ' + e.message, 'error')); }
         function getOrders() { return _dbOrders; }
-        function saveOrders(o) { _dbOrders = [...o]; _ref.orders.set(o); }
+        function saveOrders(o) { _dbOrders = [...o]; _ref.orders.set(o).catch(e => toast('Order DB Error: ' + e.message, 'error')); }
         function getProducts() { return _dbProducts.length ? _dbProducts : [...DEFAULT_PRODUCTS]; }
-        function saveProducts(p) { _dbProducts = [...p]; _ref.products.set(p); }
-        function initSuperadmin() { if (!_dbUsers.find(x => x.email === SUPERADMIN_EMAIL)) { _dbUsers.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Babken Sargsyan', role: 'superadmin' }); saveUsers(_dbUsers); } }
+        function saveProducts(p) { _dbProducts = [...p]; _ref.products.set(p).catch(e => toast('Product DB Error: ' + e.message, 'error')); }
+
+        function initSuperadmin() {
+            const idx = _dbUsers.findIndex(x => x && x.email === SUPERADMIN_EMAIL);
+            if (idx === -1) {
+                _dbUsers.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Babken Sargsyan', role: 'superadmin' });
+                saveUsers(_dbUsers);
+            } else {
+                let changed = false;
+                if (_dbUsers[idx].role !== 'superadmin') { _dbUsers[idx].role = 'superadmin'; changed = true; }
+                if (_dbUsers[idx].password !== 'admin123') { _dbUsers[idx].password = 'admin123'; changed = true; }
+                if (!(_dbUsers[idx].name)) { _dbUsers[idx].name = 'Babken Sargsyan'; changed = true; }
+                if (changed) saveUsers(_dbUsers);
+            }
+        }
 
         // ── TOAST ──
         function toast(msg, type = 'info') { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = (type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ') + ' ' + msg; $('toast-container').appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300) }, 3500) }
@@ -1561,10 +1574,21 @@
         function handleLogin(ev) {
             ev.preventDefault(); clearErrs();
             const email = $('login-email').value.trim().toLowerCase(), pass = $('login-pass').value;
-            //if(!validEmail(email)){showErr('login-email-err','Please use a @uwcdilijan.am or @student.uwcdilijan.am email');return}
-            const users = getUsers(), user = users.find(u => u.email === email && u.password === pass);
-            if (!user) { showErr('login-pass-err', 'Invalid email or password'); return }
-            loginAs(user);
+            // Fetch fresh data from Firebase to avoid cache issues
+            _ref.users.once('value').then(function (snap) {
+                _dbUsers = _fbArr(snap);
+                const user = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email && u.password === pass);
+                if (!user) {
+                    const exists = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email);
+                    if (exists) showErr('login-pass-err', 'Invalid password. Account exists.');
+                    else showErr('login-pass-err', 'Account not found. Please register or check email.');
+                    return;
+                }
+                loginAs(user);
+            }).catch(function (error) {
+                showErr('login-pass-err', 'Database Error: ' + error.message);
+                toast('Login failed: ' + error.message, 'error');
+            });
         }
 
         function handleRegister(ev) {
@@ -1626,17 +1650,19 @@
         }
 
         function setupFirebaseListeners() {
-            _ref.users.on('value', function(snap) {
+            _ref.users.on('value', function (snap) {
                 _dbUsers = _fbArr(snap);
-            });
-            _ref.orders.on('value', function(snap) {
+            }, err => console.warn('Users listener:', err.message));
+
+            _ref.orders.on('value', function (snap) {
                 _dbOrders = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
-            });
-            _ref.products.on('value', function(snap) {
+            }, err => toast('Live updates blocked: ' + err.message, 'error'));
+
+            _ref.products.on('value', function (snap) {
                 _dbProducts = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
-            });
+            }, err => console.warn('Products listener:', err.message));
         }
 
         // ── MENU ──
@@ -1892,7 +1918,7 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
         document.addEventListener('DOMContentLoaded', () => {
             // Show loading state
             $('auth-page').style.display = 'flex';
-            $('auth-page').querySelector('.auth-brand').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Connecting to server...</p>';
+            $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Connecting to server...</p>';
 
             // Set up real-time listeners
             setupFirebaseListeners();
@@ -1917,7 +1943,7 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
                     _firebaseReady = true;
 
                     // Restore session
-                    $('auth-page').querySelector('.auth-brand').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Handcrafted bubble tea, delivered to your door</p>';
+                    $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Handcrafted bubble tea, delivered to your door</p>';
                     const session = ls('bolik_session');
                     if (session) {
                         const u = _dbUsers.find(x => x.email === session.email);
@@ -1926,7 +1952,7 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
                     $('auth-page').style.display = 'flex';
                 }).catch(err => {
                     console.error('Firebase init error:', err);
-                    $('auth-page').querySelector('.auth-brand').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed. Please refresh.</p>';
+                    $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed: ' + err.message + '</p>';
                 });
             }, 100);
             // Only run once
