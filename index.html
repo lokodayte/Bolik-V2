@@ -1924,39 +1924,33 @@ ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="stat
             setupFirebaseListeners();
 
             // Wait for initial data load, then start app
-            let _loadCheck = setInterval(() => {
-                // Once users ref has fired at least once, we're ready
-                _ref.users.once('value').then(snap => {
-                    clearInterval(_loadCheck);
-                    _dbUsers = _fbArr(snap);
-                    return _ref.orders.once('value');
-                }).then(snap => {
-                    _dbOrders = _fbArr(snap);
-                    return _ref.products.once('value');
-                }).then(snap => {
-                    _dbProducts = _fbArr(snap);
+            _ref.users.once('value').then(snap => {
+                _dbUsers = _fbArr(snap);
+                return _ref.orders.once('value');
+            }).then(snap => {
+                _dbOrders = _fbArr(snap);
+                return _ref.products.once('value');
+            }).then(snap => {
+                _dbProducts = _fbArr(snap);
 
-                    // Init data if first run
-                    initSuperadmin();
-                    if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
+                // Init data if first run
+                initSuperadmin();
+                if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
 
-                    _firebaseReady = true;
+                _firebaseReady = true;
 
-                    // Restore session
-                    $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Handcrafted bubble tea, delivered to your door</p>';
-                    const session = ls('bolik_session');
-                    if (session) {
-                        const u = _dbUsers.find(x => x.email === session.email);
-                        if (u) { loginAs(u); return; }
-                    }
-                    $('auth-page').style.display = 'flex';
-                }).catch(err => {
-                    console.error('Firebase init error:', err);
-                    $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed: ' + err.message + '</p>';
-                });
-            }, 100);
-            // Only run once
-            setTimeout(() => clearInterval(_loadCheck), 500);
+                // Restore session
+                $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p>Handcrafted bubble tea, delivered to your door</p>';
+                const session = ls('bolik_session');
+                if (session) {
+                    const u = _dbUsers.find(x => x && x.email && x.email === session.email);
+                    if (u) { loginAs(u); return; }
+                }
+                $('auth-page').style.display = 'flex';
+            }).catch(err => {
+                console.error('Firebase init error:', err);
+                $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed: ' + err.message + '</p>';
+            });
         });
 
     </script>
