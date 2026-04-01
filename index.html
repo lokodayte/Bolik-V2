@@ -1726,7 +1726,7 @@
         function renderCartItems() {
             const ci = $('cart-items'), cf = $('cart-footer');
             if (!cart.length) { ci.innerHTML = '<div class="cart-empty"><span class="ce-icon">🛒</span><p>Your cart is empty.<br>Add something delicious!</p></div>'; cf.innerHTML = ''; return }
-            ci.innerHTML = cart.map((item, i) => `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${item.syrup} syrup${item.toppings.length ? ' · ' + item.toppings.join(', ') : ''}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`).join('');
+            ci.innerHTML = cart.map((item, i) => `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${item.syrup} syrup${(item.toppings && item.toppings.length) ? ' · ' + item.toppings.join(', ') : ''}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`).join('');
             const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
             cf.innerHTML = `<div class="cart-total"><span>Total</span><span class="amount">${fmt(total)}</span></div><button class="btn-primary" onclick="closeCart();navigate('checkout')">Proceed to Checkout</button>`;
         }
@@ -1739,7 +1739,7 @@
             if (!cart.length) { navigate('menu'); toast('Your cart is empty', 'error'); return }
             const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0); payScreenshot = null; cashAmount = ''; payMethod = 'cash';
             m.innerHTML = `<div class="checkout-card"><h2>Checkout</h2>
-<div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${i.productName} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${i.syrup}${i.toppings.length ? ', ' + i.toppings.join(', ') : ''})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
+<div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${i.productName} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
 <div class="divider"></div><div class="osi"><strong>Total</strong><strong style="color:var(--amber);font-family:'Playfair Display',serif;font-size:1.2rem">${fmt(total)}</strong></div></div>
 <div class="form-group"><label>Delivery Location</label><input id="co-note" placeholder="e.g. Library Room 2, Dorm 14" required><div class="form-error" id="co-note-err"></div></div>
 <div class="form-group"><label>Payment Method</label>
@@ -1803,7 +1803,7 @@ ${o.items.map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</
             const g = $('co-grid');
             if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; return }
             g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
-<div class="oc-items">${o.items.map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${i.toppings.length ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div>
+<div class="oc-items">${o.items.map(i => `${i.emoji} ${i.name} x${i.quantity} (${i.syrup}${(i.toppings && i.toppings.length) ? ', ' + i.toppings.join(', ') : ''})`).join('<br>')}</div>
 <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div>
 <div class="oc-total">${fmt(o.total)}</div></div>`).join('');
         }
@@ -1824,7 +1824,7 @@ ${o.items.map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</
             const ss = o.paymentMethod === 'card' && o.paymentDetails.screenshot ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.paymentDetails.screenshot.substring(0, 50)}','${o.id}')" title="View screenshot">` : '';
             return `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
 <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
-<div class="oc-items">${o.items.map(i => `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${i.toppings.length ? ' + ' + i.toppings.join(', ') : ''}`).join('<br>')}</div>
+<div class="oc-items">${o.items.map(i => `${i.emoji} ${i.name} x${i.quantity} — ${i.syrup}${(i.toppings && i.toppings.length) ? ' + ' + i.toppings.join(', ') : ''}`).join('<br>')}</div>
 <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash ֏' + Number(o.paymentDetails.billAmount || 0).toLocaleString() : 'Card'} ${ss}</span>${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}</div>
 <div class="oc-total">${fmt(o.total)}</div>
 ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''}</div>`;
