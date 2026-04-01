@@ -1930,7 +1930,7 @@
                 const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
                 const mkBtn = (val) => `<button type="button" ${val < total ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="setCash(${val})">֏${val.toLocaleString()}</button>`;
                 d.innerHTML = `<div class="form-group"><label>Bill amount you will hand over</label><input type="number" id="co-cash" placeholder="e.g. ${total}" value="${cashAmount}" oninput="cashAmount=this.value" min="${total}">
-<div class="cash-amounts">${mkBtn(500)}${mkBtn(1000)}${mkBtn(2000)}${mkBtn(5000)}${mkBtn(10000)}</div></div>`;
+<div class="cash-amounts">${mkBtn(1000)}${mkBtn(2000)}${mkBtn(5000)}${mkBtn(10000)}${mkBtn(20000)}</div></div>`;
             } else {
                 d.innerHTML = `<div class="card-display">${CARD_NUMBER}</div><p style="text-align:center;color:var(--taupe);font-size:.85rem;margin-bottom:16px">Transfer the total and upload a screenshot as proof</p>
 <div class="upload-area" id="upload-area"><input type="file" accept="image/*" onchange="handleScreenshot(event)"><span id="upload-text">📎 Click or drag to upload screenshot</span><br><img id="upload-preview" class="preview" style="display:none"></div>`;
