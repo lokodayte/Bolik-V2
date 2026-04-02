@@ -1869,30 +1869,35 @@
         }
 
         .leader-photo-img {
-            width: 120px;
-            height: 120px;
+            width: 180px; /* Increased from 120px for higher quality perception */
+            height: 180px;
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin: 0 auto 24px;
             object-fit: cover;
-            border: 4px solid var(--surface);
-            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.15);
+            border: 5px solid var(--surface);
+            box-shadow: 0 12px 32px rgba(217, 123, 168, 0.25);
+            transition: transform .3s ease;
+        }
+
+        .leader-photo-img:hover {
+            transform: scale(1.05);
         }
 
         .leader-initials-div {
-            width: 120px;
-            height: 120px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin: 0 auto 24px;
             background: linear-gradient(135deg, var(--amber), #F2C38B);
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 700;
-            color: white;
-            border: 4px solid var(--surface);
-            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.15);
+            color: #fff;
+            border: 5px solid var(--surface);
+            box-shadow: 0 12px 32px rgba(217, 123, 168, 0.25);
         }
 
         .leader-card-new h4 {
@@ -1946,30 +1951,35 @@
         }
 
         .team-photo-img {
-            width: 80px;
-            height: 80px;
+            width: 120px; /* Increased from 80px */
+            height: 120px;
             border-radius: 50%;
-            margin: 0 auto 14px;
+            margin: 0 auto 16px;
             object-fit: cover;
-            border: 3px solid var(--surface);
-            box-shadow: 0 4px 16px rgba(217, 123, 168, 0.1);
+            border: 4px solid var(--surface);
+            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.15);
+            transition: transform .3s ease;
+        }
+
+        .team-photo-img:hover {
+            transform: scale(1.05);
         }
 
         .team-initials-div {
-            width: 80px;
-            height: 80px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            margin: 0 auto 14px;
+            margin: 0 auto 16px;
             background: linear-gradient(135deg, #F2C38B, var(--amber));
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 700;
             color: #fff;
-            border: 3px solid var(--surface);
-            box-shadow: 0 4px 16px rgba(217, 123, 168, 0.1);
+            border: 4px solid var(--surface);
+            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.15);
         }
 
         .team-card-new h4 {
@@ -2484,8 +2494,12 @@
             const tg = document.getElementById('lp-team-grid');
             if (!lg || !tg) return;
 
-            const canManageLeaders = currentUser && currentUser.role === 'superadmin';
-            const canManageOthers = currentUser && (currentUser.role === 'superadmin' || currentUser.role === 'admin');
+            // Safety: Ensure currentUser is valid and has a role before showing admin actions
+            const isAdmin = currentUser && currentUser.role === 'admin';
+            const isSuper = currentUser && currentUser.role === 'superadmin';
+            
+            const canManageLeaders = isSuper;
+            const canManageOthers = isSuper || isAdmin;
 
             lg.innerHTML = leaders.map(m => {
                 const photo = m.photo ?
@@ -2514,7 +2528,7 @@
                         `<img src="${m.photo}" class="team-photo-img" alt="${m.name}">` :
                         `<div class="team-initials-div">${getInitials(m.name)}</div>`;
                     const actions = canManageOthers ?
-                        `<div class="card-admin-btns">
+                        `<div class="card-admin-btns" style="margin-top:16px">
                             <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">✏️ Edit</button>
                             <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">🗑️ Delete</button>
                            </div>` : '';
@@ -3761,7 +3775,8 @@
                 `<h3 style="margin-bottom:12px;font-size:1.1rem">Leader Cards (Boris & Elina — Superadmin only)</h3>`;
             if (leaders.length) {
                 html += `<div class="orders-grid" style="margin-bottom:32px">${leaders.map(m => {
-                    const photo = m.photo ? `<img src="${m.photo}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid rgba(217,123,168,0.2)">` : `<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark)">${getInitials(m.name)}</div>`;
+                    const photoSize = "80px";
+                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:1.5rem">${getInitials(m.name)}</div>`;
                     return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
                         ${photo}
                         <div style="flex:1">
@@ -3782,7 +3797,8 @@
             html += `<h3 style="margin-bottom:12px;font-size:1.1rem">Team Members</h3>`;
             if (others.length) {
                 html += `<div class="orders-grid">${others.map(m => {
-                    const photo = m.photo ? `<img src="${m.photo}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid rgba(217,123,168,0.2)">` : `<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--taupe),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">${getInitials(m.name)}</div>`;
+                    const photoSize = "80px";
+                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--taupe),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:1.5rem">${getInitials(m.name)}</div>`;
                     return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
                         ${photo}
                         <div style="flex:1">
