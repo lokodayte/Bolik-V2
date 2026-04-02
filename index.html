@@ -20,17 +20,18 @@
         }
 
         :root {
-            --dark: #1A0F06;
-            --amber: #C9850A;
-            --gold: #E8B84B;
-            --cream: #FAF6EE;
-            --surface: #FFF8F0;
-            --taupe: #9B8B7A;
+            --dark: #2A2A2A;
+            --amber: #D97BA8;
+            --gold: #F2C38B;
+            --cream: #FFF6F2;
+            --surface: #FFE4EC;
+            --taupe: #777777;
+            --accent: #E6A15A;
             --danger: #c0392b;
             --success: #27ae60;
             --info: #2980b9;
-            --radius: 20px;
-            --shadow: 0 4px 24px rgba(26, 15, 6, .12)
+            --radius: 24px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .05)
         }
 
         html {
@@ -67,7 +68,7 @@
             font-family: 'DM Sans', sans-serif;
             outline: none;
             border: 2px solid #e0d5c7;
-            border-radius: 12px;
+            border-radius: 30px;
             padding: 12px 16px;
             font-size: .95rem;
             transition: border .2s;
@@ -97,13 +98,16 @@
             left: 0;
             right: 0;
             height: 64px;
-            background: var(--dark);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
             z-index: 100;
-            box-shadow: 0 2px 16px rgba(0, 0, 0, .3)
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: none;
+            border-bottom: 1px solid rgba(217, 123, 168, 0.1);
         }
 
         .nav-brand {
@@ -125,7 +129,6 @@
 
         .nav-links button {
             background: transparent;
-            color: var(--cream);
             padding: 8px 18px;
             border-radius: 10px;
             font-size: .9rem;
@@ -136,8 +139,8 @@
         .nav-links button:hover,
         .nav-links button.active {
             opacity: 1;
-            background: rgba(201, 133, 10, .15);
-            color: var(--gold)
+            background: rgba(217, 123, 168, .15);
+            color: black;
         }
 
         .nav-right {
@@ -152,15 +155,15 @@
         }
 
         .nav-logout {
-            background: rgba(255, 255, 255, .08);
-            color: var(--cream);
+            background: rgb(199 119 23 / 75%);
+            color: black;
             padding: 6px 16px;
             border-radius: 8px;
             font-size: .85rem
         }
 
         .nav-logout:hover {
-            background: rgba(255, 255, 255, .15)
+            background: rgba(159, 19, 183, 0.15)
         }
 
         .cart-btn {
@@ -203,7 +206,6 @@
             flex-direction: column;
             width: 100%;
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--dark), #2c1a0c);
             color: var(--surface);
             position: relative;
             overflow: hidden;
@@ -217,7 +219,6 @@
             right: -10%;
             width: 60vw;
             height: 60vw;
-            background: radial-gradient(circle, rgba(201, 133, 10, 0.3) 0%, rgba(201, 133, 10, 0) 70%);
             border-radius: 50%;
             filter: blur(60px);
             z-index: 1;
@@ -231,7 +232,6 @@
             left: -10%;
             width: 50vw;
             height: 50vw;
-            background: radial-gradient(circle, rgba(232, 184, 75, 0.2) 0%, rgba(26, 15, 6, 0) 70%);
             border-radius: 50%;
             filter: blur(40px);
             z-index: 1;
@@ -245,7 +245,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2rem 1rem;
         }
 
         .lp-header {
@@ -266,16 +265,11 @@
             font-size: 1.8rem;
             font-weight: 700;
             color: var(--gold);
-        }
-
-        .lp-logo span {
-            color: var(--surface);
+            max-width: 150px;
         }
 
         .btn-enter {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgb(225, 176, 84);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--surface);
             padding: 12px 24px;
@@ -285,10 +279,32 @@
             transition: all 0.3s ease;
         }
 
+        .auth-back-btn {
+            width: 100%;
+            margin-top: 14px;
+            padding: 13px 16px;
+            background: var(--cream);
+            color: var(--dark);
+            border: 1px solid #e0d5c7;
+            border-radius: 12px;
+            font-size: .95rem;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+            transition: all .25s ease;
+        }
+
+        .auth-back-btn:hover {
+            background: #fff;
+            border-color: var(--amber);
+            color: var(--amber);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(217, 123, 168, 0.12);
+        }
+
         .btn-enter:hover {
             background: var(--amber);
             border-color: var(--amber);
-            box-shadow: 0 4px 15px rgba(201, 133, 10, 0.4);
+            box-shadow: 0 4px 15px rgba(172, 37, 136, 0.4);
             transform: translateY(-2px);
         }
 
@@ -303,11 +319,11 @@
         }
 
         .lp-hero h1 {
-            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-size: clamp(3rem, 3vw, 5.5rem);
             line-height: 1.1;
             margin-bottom: 24px;
             color: var(--surface);
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
         }
 
         .lp-hero h1 span {
@@ -317,7 +333,7 @@
 
         .lp-hero p {
             font-size: clamp(1.1rem, 2vw, 1.4rem);
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(100, 65, 0, 0.64);
             margin-bottom: 40px;
             line-height: 1.5;
             font-weight: 300;
@@ -367,7 +383,7 @@
         .leader-card:hover {
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(201, 133, 10, 0.3);
+            border-color: rgba(217, 123, 168, 0.3);
         }
 
         .leader-avatar {
@@ -381,7 +397,7 @@
             justify-content: center;
             font-size: 2.2rem;
             color: var(--dark);
-            box-shadow: inset 0 0 0 3px rgba(26, 15, 6, 0.3);
+            box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.3);
         }
 
         .leader-card h4 {
@@ -437,7 +453,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--dark) 0%, #2a1a0e 100%);
+            background: linear-gradient(135deg, #FFE4EC 0%, #F2C38B 100%);
             padding: 20px
         }
 
@@ -541,7 +557,7 @@
 
         .role-opt.active {
             border-color: var(--amber);
-            background: rgba(201, 133, 10, .08);
+            background: rgba(217, 123, 168, .08);
             color: var(--amber)
         }
 
@@ -604,7 +620,7 @@
 
         .menu-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(26, 15, 6, .18)
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .18)
         }
 
         .menu-card .tag {
@@ -669,7 +685,7 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(26, 15, 6, .6);
+            background: rgba(0, 0, 0, .6);
             z-index: 200;
             display: flex;
             align-items: center;
@@ -768,7 +784,7 @@
 
         .syrup-opt.active {
             border-color: var(--amber);
-            background: rgba(201, 133, 10, .1);
+            background: rgba(217, 123, 168, .1);
             color: var(--amber)
         }
 
@@ -1015,7 +1031,7 @@
 
         .payment-tabs button.active {
             border-color: var(--amber);
-            background: rgba(201, 133, 10, .08);
+            background: rgba(217, 123, 168, .08);
             color: var(--amber)
         }
 
@@ -1043,7 +1059,7 @@
 
         .upload-area:hover {
             border-color: var(--amber);
-            background: rgba(201, 133, 10, .03)
+            background: rgba(217, 123, 168, .03)
         }
 
         .upload-area input[type=file] {
@@ -1150,7 +1166,7 @@
         }
 
         .oc-items {
-            font-size: .85rem;
+            font-size: .95rem; /* Increased from .85rem */
             color: var(--taupe);
             margin-bottom: 8px;
             line-height: 1.6
@@ -1278,7 +1294,7 @@
 
         .admin-tabs button.active {
             border-color: var(--amber);
-            background: rgba(201, 133, 10, .08);
+            background: rgba(217, 123, 168, .08);
             color: var(--amber)
         }
 
@@ -1437,7 +1453,7 @@
         .tabs-row button.active {
             border-color: var(--amber);
             color: var(--amber);
-            background: rgba(201, 133, 10, .06)
+            background: rgba(217, 123, 168, .06)
         }
 
         /* IMAGE MODAL */
@@ -1641,6 +1657,396 @@
                 padding: 16px 12px
             }
         }
+
+        /* ── LANDING PAGE PROFESSIONAL STYLES ── */
+        .lp-hero-wrap {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #FFE4EC 0%, #F2C38B 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1.5rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lp-bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: floatBubble 12s infinite ease-in-out;
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.8), 0 10px 30px rgba(217, 123, 168, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .lp-bubble:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 15%;
+            left: 8%;
+        }
+
+        .lp-bubble:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 5%;
+            animation-delay: -3s;
+            animation-duration: 15s;
+        }
+
+        .lp-bubble:nth-child(3) {
+            width: 50px;
+            height: 50px;
+            top: 35%;
+            right: 20%;
+            animation-delay: -6s;
+            animation-duration: 10s;
+        }
+
+        .lp-bubble:nth-child(4) {
+            width: 90px;
+            height: 90px;
+            bottom: 15%;
+            left: 15%;
+            animation-delay: -4s;
+            animation-duration: 14s;
+        }
+
+        @keyframes floatBubble {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: translateY(-30px) scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .lp-scroll-hint {
+            margin-top: auto;
+            padding-top: 40px;
+            color: var(--taupe);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 1s ease 1s both;
+        }
+
+        .lp-scroll-hint .arrow {
+            animation: bounceDown 1.5s infinite;
+            font-size: 1.2rem;
+        }
+
+        @keyframes bounceDown {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(8px);
+            }
+        }
+
+        /* About section */
+        .lp-section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .lp-section-title span {
+            color: var(--amber);
+            font-style: italic;
+        }
+
+        .lp-section-sub {
+            text-align: center;
+            color: var(--taupe);
+            font-size: 1.05rem;
+            margin-bottom: 40px;
+        }
+
+        .lp-about {
+            width: 100%;
+            max-width: 1100px;
+            padding: 80px 24px 40px;
+            margin: 0 auto;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .about-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(217, 123, 168, 0.1);
+            border-radius: var(--radius);
+            padding: 36px 28px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .about-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .about-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .about-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+            color: var(--dark);
+        }
+
+        .about-card p {
+            color: #5a4a3a;
+            font-size: 0.93rem;
+            line-height: 1.7;
+        }
+
+        .about-bolik {
+            text-align: center;
+            border: 2px solid rgba(217, 123, 168, 0.15);
+            background: linear-gradient(135deg, rgba(232, 184, 75, 0.05), rgba(217, 123, 168, 0.05));
+        }
+
+        /* Leaders & Team sections */
+        .lp-leaders-section,
+        .lp-team-section {
+            width: 100%;
+            max-width: 1100px;
+            padding: 60px 24px;
+            margin: 0 auto;
+        }
+
+        .leader-card-new {
+            background: #ffffff;
+            border: none;
+            border-radius: var(--radius);
+            padding: 40px 32px;
+            width: 340px;
+            text-align: center;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 40px rgba(217, 123, 168, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .leader-card-new::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--amber), var(--gold));
+        }
+
+        .leader-card-new:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(217, 123, 168, 0.15);
+        }
+
+        .leader-photo-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            object-fit: cover;
+            border: 4px solid var(--surface);
+            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.15);
+        }
+
+        .leader-initials-div {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--amber), #F2C38B);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            border: 4px solid var(--surface);
+            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.15);
+        }
+
+        .leader-card-new h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+            color: var(--dark);
+        }
+
+        .leader-card-title {
+            color: var(--amber);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .leader-card-desc {
+            color: #6a5a4a;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .card-admin-btns {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .team-grid-new {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .team-card-new {
+            background: #ffffff;
+            border: none;
+            border-radius: var(--radius);
+            padding: 28px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(217, 123, 168, 0.05);
+        }
+
+        .team-card-new:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(217, 123, 168, 0.12);
+        }
+
+        .team-photo-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 14px;
+            object-fit: cover;
+            border: 3px solid var(--surface);
+            box-shadow: 0 4px 16px rgba(217, 123, 168, 0.1);
+        }
+
+        .team-initials-div {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 14px;
+            background: linear-gradient(135deg, #F2C38B, var(--amber));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            border: 3px solid var(--surface);
+            box-shadow: 0 4px 16px rgba(217, 123, 168, 0.1);
+        }
+
+        .team-card-new h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            color: var(--dark);
+        }
+
+        .team-card-title {
+            color: var(--amber);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .team-card-desc {
+            color: var(--taupe);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        .lp-footer {
+            width: 100%;
+            background: var(--dark);
+            padding: 40px 0;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-logo {
+            width: 50px;
+            height: auto;
+        }
+
+        .footer-brand p {
+            color: var(--taupe);
+            font-size: 0.9rem;
+        }
+
+        .footer-links p {
+            color: var(--taupe);
+            font-size: 0.85rem;
+        }
+
+        @media(max-width:768px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .leader-card-new {
+                width: 100%;
+                max-width: 340px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
@@ -1652,37 +2058,84 @@
     <!-- ── LANDING PAGE ── -->
     <div id="landing-page">
         <div class="lp-content">
-            <header class="lp-header">
-                <div class="lp-logo">🧋 B<span>o</span>lik</div>
-                <button class="btn-enter" onclick="goToAuth()">Login / Sign Up</button>
-            </header>
+            <!-- Hero -->
+            <div class="lp-hero-wrap">
+                <div class="lp-bubble"></div>
+                <div class="lp-bubble"></div>
+                <div class="lp-bubble"></div>
+                <div class="lp-bubble"></div>
+                <header class="lp-header">
+                    <img src="bolik_logo.png" alt="logo" class="lp-logo">
+                    <button class="btn-enter" onclick="goToAuth()">Login / Sign Up</button>
+                </header>
+                <main class="lp-hero">
+                    <h1 style="color: #F0A75C;"><span style="color: #c33cc170;">Bolik</span> — Your Happiness, Twice a Week</h1>
+                    <p>Premium handcrafted bubble tea, delivered to your door at UWC Dilijan. We blend tradition with
+                        modern taste</p>
+                </main>
+                <div class="lp-scroll-hint">
+                    <span>Discover more</span><span class="arrow">↓</span>
+                </div>
+            </div>
 
-            <main class="lp-hero">
-                <h1>Taste the <span>Luxury</span><br>of Everyday</h1>
-                <p>Welcome to Bolik, the premium handcrafted bubble tea experience delivered directly to your door at
-                    UWC Dilijan. We blend tradition with modern taste.</p>
-            </main>
-
-            <section class="lp-leaders">
-                <h3>Meet the Leaders</h3>
-                <div class="leaders-grid">
-                    <div class="leader-card">
-                        <div class="leader-avatar">💻</div>
-                        <h4>Boris Sargsyan</h4>
-                        <p>Lead Developer</p>
+            <!-- About UWC -->
+            <section class="lp-about">
+                <h2 class="lp-section-title">About <span>UWC Dilijan</span></h2>
+                <p class="lp-section-sub">Where education meets purpose</p>
+                <div class="about-grid">
+                    <div class="about-card">
+                        <div class="about-icon">🌍</div>
+                        <h3>United World Colleges</h3>
+                        <p>UWC is a global education movement of 18 schools across four continents, uniting young people
+                            from over 155 countries. Founded on the belief that education can bridge cultural divides,
+                            UWC empowers students to become agents of change through shared living, experiential
+                            learning, and service.</p>
                     </div>
-                    <div class="leader-card">
-                        <div class="leader-avatar">👑</div>
-                        <h4>Elina Mosoyan</h4>
-                        <p>Founder & Leader</p>
-                    </div>
-                    <div class="leader-card">
-                        <div class="leader-avatar">🎯</div>
-                        <h4>Matteo Saad</h4>
-                        <p>CAS Leader</p>
+                    <div class="about-card">
+                        <div class="about-icon">🏔️</div>
+                        <h3>UWC Dilijan, Armenia</h3>
+                        <p>Nestled in the lush forests of Dilijan National Park, UWC Dilijan opened in 2014 as the 14th
+                            UWC. Nearly 200 students from 80+ countries live, learn, and create together here. The
+                            campus blends world-class architecture with nature, fostering a vibrant community of
+                            thinkers, leaders, and changemakers.</p>
                     </div>
                 </div>
+                <div class="about-card about-bolik">
+                    <div class="about-icon">🧋</div>
+                    <h3>What is Bolik?</h3>
+                    <p>Bolik is a student-founded CAS (Creativity, Activity, Service) initiative at UWC Dilijan. Born
+                        from a love for bubble tea and community, Bolik crafts premium drinks with hand-selected
+                        ingredients and delivers them across campus. Every cup supports student entrepreneurship and the
+                        spirit of service that defines UWC life.</p>
+                </div>
             </section>
+
+            <!-- Leaders Section (Boris & Elina) -->
+            <section class="lp-leaders-section">
+                <h2 class="lp-section-title">Our <span>Leaders</span></h2>
+                <p class="lp-section-sub">The visionaries behind Bolik</p>
+                <div class="leaders-grid" id="lp-leaders-grid"></div>
+            </section>
+
+            <!-- Team Section -->
+            <section class="lp-team-section">
+                <h2 class="lp-section-title">Our <span>Team</span></h2>
+                <p class="lp-section-sub">The amazing people who make it happen</p>
+                <div class="team-grid-new" id="lp-team-grid"></div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="lp-footer">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <img src="bolik_logo.png" alt="Bolik" class="footer-logo">
+                        <p>Handcrafted with love at UWC Dilijan</p>
+                    </div>
+                    <div class="footer-links">
+                        <p>&copy; 2026 Bolik — A UWC Dilijan CAS Project</p>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 
@@ -1733,12 +2186,16 @@
                 </div>
                 <button type="submit" class="btn-primary">Create Account</button>
             </form>
+            <button onclick="goToLanding()" class="btn-outline" style="margin-top:12px; width:100%">
+                ← Back to Landing Page
+            </button>
         </div>
     </div>
 
+
     <div id="app">
         <nav>
-            <div class="nav-brand">B<span>o</span>lik</div>
+            <div class="nav-brand"><img src="bolik_logo.png" alt="logo" style="width: 110px;"></div>
             <div class="nav-links" id="nav-links"></div>
             <div class="nav-right">
                 <span class="nav-user" id="nav-user"></span>
@@ -1757,7 +2214,7 @@
         <div class="cart-items" id="cart-items"></div>
         <div class="cart-footer" id="cart-footer"></div>
     </div>
-    <div id="cart-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(26,15,6,.4);z-index:250"
+    <div id="cart-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:250"
         onclick="toggleCart()"></div>
 
     <div id="modal-overlay" class="modal-overlay hidden"></div>
@@ -1765,16 +2222,81 @@
 
     <script>
         // ── DATA ──
-        const DEFAULT_SYRUPS = ['Classic Milk', 'Taro', 'Brown Sugar', 'Strawberry', 'Matcha', 'Passion Fruit', 'Lychee Rose'];
-        const DEFAULT_BUBBLES = [{ name: 'Tapioca Pearls', emoji: '⚫' }, { name: 'Popping Boba', emoji: '🫧' }, { name: 'Coconut Jelly', emoji: '🥥' }, { name: 'Red Bean', emoji: '🫘' }, { name: 'Aloe Vera', emoji: '🌿' }];
-        const DEFAULT_PRODUCTS = [
-            { id: 1, name: 'Classic Milk Tea', emoji: '🧋', description: 'Rich and creamy traditional milk tea with a smooth, malty finish', price: 1200, tag: 'Popular' },
-            { id: 2, name: 'Taro Dream', emoji: '🟣', description: 'Velvety taro with a hint of vanilla and natural sweetness', price: 1500, tag: 'Signature' },
-            { id: 3, name: 'Brown Sugar Boba', emoji: '🍯', description: 'Caramelized brown sugar swirled with fresh milk and tiger stripes', price: 1800, tag: 'Best Seller' },
-            { id: 4, name: 'Strawberry Bliss', emoji: '🍓', description: 'Fresh strawberry essence blended with cream for a fruity finish', price: 1400, tag: 'Fruity' },
-            { id: 5, name: 'Matcha Zen', emoji: '🍵', description: 'Ceremonial-grade Japanese matcha, earthy and impossibly smooth', price: 2000, tag: 'Premium' },
-            { id: 6, name: 'Passion Fruit Burst', emoji: '🌺', description: 'Tropical passion fruit with a tangy, refreshing twist', price: 1300, tag: 'Refreshing' },
-            { id: 7, name: 'Lychee Rose Garden', emoji: '🌹', description: 'Delicate lychee meets aromatic rose petals in a floral symphony', price: 1700, tag: 'Signature' }
+        const DEFAULT_SYRUPS = ['Classic Milk', 'Taro', 'Brown Sugar', 'Strawberry', 'Matcha', 'Passion Fruit',
+            'Lychee Rose'
+        ];
+        const DEFAULT_BUBBLES = [{
+            name: 'Tapioca Pearls',
+            emoji: '⚫'
+        }, {
+            name: 'Popping Boba',
+            emoji: '🫧'
+        }, {
+            name: 'Coconut Jelly',
+            emoji: '🥥'
+        }, {
+            name: 'Red Bean',
+            emoji: '🫘'
+        }, {
+            name: 'Aloe Vera',
+            emoji: '🌿'
+        }];
+        const DEFAULT_PRODUCTS = [{
+                id: 1,
+                name: 'Classic Milk Tea',
+                emoji: '🧋',
+                description: 'Rich and creamy traditional milk tea with a smooth, malty finish',
+                price: 1200,
+                tag: 'Popular'
+            },
+            {
+                id: 2,
+                name: 'Taro Dream',
+                emoji: '🟣',
+                description: 'Velvety taro with a hint of vanilla and natural sweetness',
+                price: 1500,
+                tag: 'Signature'
+            },
+            {
+                id: 3,
+                name: 'Brown Sugar Boba',
+                emoji: '🍯',
+                description: 'Caramelized brown sugar swirled with fresh milk and tiger stripes',
+                price: 1800,
+                tag: 'Best Seller'
+            },
+            {
+                id: 4,
+                name: 'Strawberry Bliss',
+                emoji: '🍓',
+                description: 'Fresh strawberry essence blended with cream for a fruity finish',
+                price: 1400,
+                tag: 'Fruity'
+            },
+            {
+                id: 5,
+                name: 'Matcha Zen',
+                emoji: '🍵',
+                description: 'Ceremonial-grade Japanese matcha, earthy and impossibly smooth',
+                price: 2000,
+                tag: 'Premium'
+            },
+            {
+                id: 6,
+                name: 'Passion Fruit Burst',
+                emoji: '🌺',
+                description: 'Tropical passion fruit with a tangy, refreshing twist',
+                price: 1300,
+                tag: 'Refreshing'
+            },
+            {
+                id: 7,
+                name: 'Lychee Rose Garden',
+                emoji: '🌹',
+                description: 'Delicate lychee meets aromatic rose petals in a floral symphony',
+                price: 1700,
+                tag: 'Signature'
+            }
         ];
         const SUPERADMIN_EMAIL = 'b.sargsyan@student.uwcdilijan.am';
         const CARD_NUMBER = 'Elina: 4083 0600 1503 9825';
@@ -1791,7 +2313,14 @@
         };
         firebase.initializeApp(firebaseConfig);
         const _fb = firebase.database();
-        const _ref = { users: _fb.ref('bolik_users'), orders: _fb.ref('bolik_orders'), products: _fb.ref('bolik_products'), syrups: _fb.ref('bolik_syrups'), bubbles: _fb.ref('bolik_bubbles') };
+        const _ref = {
+            users: _fb.ref('bolik_users'),
+            orders: _fb.ref('bolik_orders'),
+            products: _fb.ref('bolik_products'),
+            syrups: _fb.ref('bolik_syrups'),
+            bubbles: _fb.ref('bolik_bubbles'),
+            team: _fb.ref('bolik_team')
+        };
 
         // ── STATE ──
         let cart = [];
@@ -1803,62 +2332,405 @@
         let _dbProducts = [];
         let _dbSyrups = [];
         let _dbBubbles = [];
+        let _dbTeam = [];
         let _firebaseReady = false;
 
         // ── HELPERS ──
         const $ = id => document.getElementById(id);
-        const ls = (k, v) => { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)) };
+        const ls = (k, v) => {
+            if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null');
+            localStorage.setItem(k, JSON.stringify(v))
+        };
         const fmt = n => '֏' + n.toLocaleString();
         const genId = () => 'BO-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        const fmtDate = d => { const o = new Date(d); return o.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + o.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) };
+        const fmtDate = d => {
+            const o = new Date(d);
+            return o.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }) + ' ' + o.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        };
         const dateKey = d => new Date(d).toISOString().split('T')[0];
-        function _fbArr(snap) { const v = snap.val(); if (!v) return []; return Array.isArray(v) ? v.filter(Boolean) : Object.values(v); }
-        function validEmail(email) { return email.endsWith('@uwcdilijan.am') || email.endsWith('@student.uwcdilijan.am'); }
-        const _itemDetail = i => { let d = i.syrup; if (i.bubbles && i.bubbles.length) d += ', ' + i.bubbles.join(', '); if (i.bubbleAmount === 'extra' || i.extraBubbles) d += ' <span style="display:inline-block;background:var(--amber);color:#1a0f06;padding:0 6px;border-radius:4px;font-weight:900;font-size:0.75rem;margin-left:5px;vertical-align:middle;box-shadow:0 0 10px rgba(201, 133, 10, 0.4)">EXTRA BUBBLES</span>'; return d; };
+
+        function _fbArr(snap) {
+            const v = snap.val();
+            if (!v) return [];
+            return Array.isArray(v) ? v.filter(Boolean) : Object.values(v);
+        }
+
+        function validEmail(email) {
+            return email.endsWith('@uwcdilijan.am') || email.endsWith('@student.uwcdilijan.am');
+        }
+        const _itemDetail = i => {
+            let d = `<span style="opacity:0.8">Syrup:</span> ${i.syrup}`;
+            if (i.bubbles && i.bubbles.length) d += ` | <span style="opacity:0.8">Bubbles:</span> ${i.bubbles.join(', ')}`;
+            if (i.bubbleAmount === 'extra' || i.extraBubbles) d +=
+                ' <span style="display:inline-block;background:var(--amber);color:#fff;padding:0 6px;border-radius:4px;font-weight:900;font-size:0.75rem;margin-left:5px;vertical-align:middle;box-shadow:0 0 10px rgba(217, 123, 168, 0.4)">EXTRA BUBBLES</span>';
+            return d;
+        };
 
         // ── DATA (Firebase-backed with local cache) ──
-        function getUsers() { return _dbUsers; }
-        function saveUsers(u) { _dbUsers = [...u]; _ref.users.set(u).catch(e => toast('User DB Error: ' + e.message, 'error')); }
-        function getOrders() { return _dbOrders; }
-        function saveOrders(o) { _dbOrders = [...o]; _ref.orders.set(o).catch(e => toast('Order DB Error: ' + e.message, 'error')); }
-        function getProducts() { return _dbProducts.length ? _dbProducts : [...DEFAULT_PRODUCTS]; }
-        function saveProducts(p) { _dbProducts = [...p]; _ref.products.set(p).catch(e => toast('Product DB Error: ' + e.message, 'error')); }
-        function getSyrups() { return _dbSyrups.length ? _dbSyrups : [...DEFAULT_SYRUPS]; }
-        function saveSyrups(s) { _dbSyrups = [...s]; _ref.syrups.set(s).catch(e => toast('Syrups DB Error: ' + e.message, 'error')); }
-        function getBubbles() { return _dbBubbles.length ? _dbBubbles : [...DEFAULT_BUBBLES]; }
-        function saveBubbles(t) { _dbBubbles = [...t]; _ref.bubbles.set(t).catch(e => toast('Bubbles DB Error: ' + e.message, 'error')); }
+        function getUsers() {
+            return _dbUsers;
+        }
+
+        function saveUsers(u) {
+            _dbUsers = [...u];
+            _ref.users.set(u).catch(e => toast('User DB Error: ' + e.message, 'error'));
+        }
+
+        function getOrders() {
+            return _dbOrders;
+        }
+
+        function saveOrders(o) {
+            _dbOrders = [...o];
+            _ref.orders.set(o).catch(e => toast('Order DB Error: ' + e.message, 'error'));
+        }
+
+        function getProducts() {
+            return _dbProducts.length ? _dbProducts : [...DEFAULT_PRODUCTS];
+        }
+
+        function saveProducts(p) {
+            _dbProducts = [...p];
+            _ref.products.set(p).catch(e => toast('Product DB Error: ' + e.message, 'error'));
+        }
+
+        function getSyrups() {
+            return _dbSyrups.length ? _dbSyrups : [...DEFAULT_SYRUPS];
+        }
+
+        function saveSyrups(s) {
+            _dbSyrups = [...s];
+            _ref.syrups.set(s).catch(e => toast('Syrups DB Error: ' + e.message, 'error'));
+        }
+
+        function getBubbles() {
+            return _dbBubbles.length ? _dbBubbles : [...DEFAULT_BUBBLES];
+        }
+
+        function saveBubbles(t) {
+            _dbBubbles = [...t];
+            _ref.bubbles.set(t).catch(e => toast('Bubbles DB Error: ' + e.message, 'error'));
+        }
+
+        function getTeam() {
+            return _dbTeam;
+        }
+
+        function saveTeam(t) {
+            _dbTeam = [...t];
+            _ref.team.set(t).catch(e => toast('Team DB Error: ' + e.message, 'error'));
+        }
+
+        const DEFAULT_TEAM = [{
+                id: 't1',
+                name: 'Boris Sargsyan',
+                title: 'Lead Developer & Co-Founder',
+                description: 'Boris is the technical backbone of Bolik, building the platform that powers every order. A passionate developer and CAS leader at UWC Dilijan.',
+                photo: null,
+                isLeader: true,
+                order: 0
+            },
+            {
+                id: 't2',
+                name: 'Elina Mosoyan',
+                title: 'Founder & Project Leader',
+                description: 'Elina is the heart of Bolik — her vision and leadership shaped the entire project. She drives the mission of student entrepreneurship at UWC Dilijan.',
+                photo: null,
+                isLeader: true,
+                order: 1
+            },
+            {
+                id: 't3',
+                name: 'Matteo Saad',
+                title: 'CAS Coordinator',
+                description: 'Matteo ensures Bolik stays true to its CAS roots, coordinating activities and keeping the team connected to UWC values.',
+                photo: null,
+                isLeader: false,
+                order: 2
+            }
+        ];
+
+        function initTeam() {
+            if (!_dbTeam.length) {
+                saveTeam(DEFAULT_TEAM);
+            }
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function renderLandingTeam() {
+            const team = getTeam();
+            const leaders = team.filter(m => m.isLeader).sort((a, b) => a.order - b.order);
+            const others = team.filter(m => !m.isLeader).sort((a, b) => a.order - b.order);
+
+            const lg = document.getElementById('lp-leaders-grid');
+            const tg = document.getElementById('lp-team-grid');
+            if (!lg || !tg) return;
+
+            const canManageLeaders = currentUser && currentUser.role === 'superadmin';
+            const canManageOthers = currentUser && (currentUser.role === 'superadmin' || currentUser.role === 'admin');
+
+            lg.innerHTML = leaders.map(m => {
+                const photo = m.photo ?
+                    `<img src="${m.photo}" class="leader-photo-img" alt="${m.name}">` :
+                    `<div class="leader-initials-div">${getInitials(m.name)}</div>`;
+                const actions = canManageLeaders ?
+                    `<div class="card-admin-btns">
+                        <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">✏️ Edit</button>
+                        <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">🗑️ Delete</button>
+                       </div>` : '';
+                return `<div class="leader-card-new">
+                    ${photo}
+                    <h4>${m.name}</h4>
+                    <div class="leader-card-title">${m.title}</div>
+                    <div class="leader-card-desc">${m.description || ''}</div>
+                    ${actions}
+                </div>`;
+            }).join('');
+
+            if (!others.length) {
+                tg.innerHTML =
+                    '<p style="color:var(--taupe);text-align:center;padding:20px">No other team members yet.</p>';
+            } else {
+                tg.innerHTML = others.map(m => {
+                    const photo = m.photo ?
+                        `<img src="${m.photo}" class="team-photo-img" alt="${m.name}">` :
+                        `<div class="team-initials-div">${getInitials(m.name)}</div>`;
+                    const actions = canManageOthers ?
+                        `<div class="card-admin-btns">
+                            <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">✏️ Edit</button>
+                            <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">🗑️ Delete</button>
+                           </div>` : '';
+                    return `<div class="team-card-new">
+                        ${photo}
+                        <h4>${m.name}</h4>
+                        <div class="team-card-title">${m.title}</div>
+                        <div class="team-card-desc">${m.description || ''}</div>
+                        ${actions}
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        function deleteTeamMember(id) {
+            const team = getTeam();
+            const m = team.find(x => x.id === id);
+            if (!m) return;
+            if (m.isLeader && currentUser.role !== 'superadmin') {
+                toast('Only Superadmin can delete leader cards', 'error');
+                return;
+            }
+            if (!confirm('Delete ' + m.name + ' from the team?')) return;
+            saveTeam(team.filter(x => x.id !== id));
+            toast(m.name + ' removed', 'info');
+            renderLandingTeam();
+            if (currentPage === 'admin') renderAdminTab();
+        }
+
+        function openEditTeamMember(id) {
+            const team = getTeam();
+            const m = id ? team.find(x => x.id === id) : null;
+            const isNew = !m;
+            const isLeader = m ? m.isLeader : false;
+
+            if (isLeader && currentUser.role !== 'superadmin') {
+                toast('Only Superadmin can edit leader cards', 'error');
+                return;
+            }
+
+            const ov = $('modal-overlay');
+            ov.classList.remove('hidden');
+            let photoData = m ? (m.photo || null) : null;
+
+            ov.innerHTML = `<div class="modal">
+                <button class="modal-close" onclick="$('modal-overlay').classList.add('hidden')">✕</button>
+                <h2>${isNew ? 'Add Team Member' : 'Edit ' + m.name}</h2>
+                <p class="modal-sub">${isLeader ? 'Leader card (superadmin only)' : 'Team member'}</p>
+                <div class="form-group"><label>Full Name</label><input id="tm-name" value="${m ? m.name : ''}"></div>
+                <div class="form-group"><label>Title / Role</label><input id="tm-title" value="${m ? m.title : ''}"></div>
+                <div class="form-group"><label>Description</label><textarea id="tm-desc" rows="3" style="resize:vertical">${m ? (m.description || '') : ''}</textarea></div>
+                ${isNew ? `<div class="form-group"><label>Type</label>
+                    <div style="display:flex;gap:8px">
+                        <div class="role-opt" id="tm-type-other" onclick="tmSetLeader(false)" style="flex:1">Regular Employee</div>
+                        ${currentUser.role === 'superadmin' ? '<div class="role-opt" id="tm-type-leader" onclick="tmSetLeader(true)" style="flex:1">Leader (top card)</div>' : ''}
+                    </div></div>` : ''}
+                <div class="form-group"><label>Photo (optional)</label>
+                    <div class="upload-area" style="padding:20px">
+                        <input type="file" accept="image/*" onchange="tmHandlePhoto(event)">
+                        <span id="tm-upload-txt">${photoData ? '✓ Photo uploaded' : '📎 Click to upload photo'}</span>
+                        <img id="tm-preview" style="max-width:100px;max-height:100px;border-radius:50%;margin-top:8px;${photoData ? '' : 'display:none'}" src="${photoData || ''}">
+                    </div>
+                </div>
+                <div class="form-error" id="tm-err"></div>
+                <button class="btn-primary" onclick="saveTeamMember('${id || ''}', ${isLeader})">${isNew ? 'Add Member' : 'Save Changes'}</button>
+            </div>`;
+
+            let _isLeader = isLeader;
+            window.tmSetLeader = (val) => {
+                _isLeader = val;
+                document.querySelectorAll('#tm-type-other, #tm-type-leader').forEach(el => el.classList.remove(
+                    'active'));
+                const target = document.getElementById(val ? 'tm-type-leader' : 'tm-type-other');
+                if (target) target.classList.add('active');
+                window._tmIsLeader = val;
+            };
+            window._tmIsLeader = isLeader;
+            if (isNew) {
+                const otherEl = document.getElementById('tm-type-other');
+                if (otherEl) otherEl.classList.add('active');
+            }
+            window.tmHandlePhoto = (ev) => {
+                const f = ev.target.files[0];
+                if (!f) return;
+                const r = new FileReader();
+                r.onload = e => {
+                    photoData = e.target.result;
+                    const prev = document.getElementById('tm-preview');
+                    const txt = document.getElementById('tm-upload-txt');
+                    if (prev) {
+                        prev.src = photoData;
+                        prev.style.display = 'block';
+                    }
+                    if (txt) txt.textContent = '✓ Photo uploaded';
+                };
+                r.readAsDataURL(f);
+            };
+            window.saveTeamMember = (existingId, wasLeader) => {
+                const name = document.getElementById('tm-name').value.trim();
+                const title = document.getElementById('tm-title').value.trim();
+                const desc = document.getElementById('tm-desc').value.trim();
+                if (!name || !title) {
+                    showErr('tm-err', 'Name and title are required');
+                    return;
+                }
+                const team = getTeam();
+                if (existingId) {
+                    const idx = team.findIndex(x => x.id === existingId);
+                    if (idx >= 0) {
+                        team[idx] = {
+                            ...team[idx],
+                            name,
+                            title,
+                            description: desc,
+                            photo: photoData
+                        };
+                    }
+                } else {
+                    const newIsLeader = window._tmIsLeader;
+                    const maxOrder = team.length ? Math.max(...team.map(x => x.order)) + 1 : 0;
+                    team.push({
+                        id: 't' + Date.now(),
+                        name,
+                        title,
+                        description: desc,
+                        photo: photoData,
+                        isLeader: newIsLeader,
+                        order: maxOrder
+                    });
+                }
+                saveTeam(team);
+                toast(existingId ? 'Member updated' : name + ' added to team', 'success');
+                $('modal-overlay').classList.add('hidden');
+                renderLandingTeam();
+                if (currentPage === 'admin') renderAdminTab();
+            };
+        }
 
         function initSuperadmin() {
             const idx = _dbUsers.findIndex(x => x && x.email === SUPERADMIN_EMAIL);
             if (idx === -1) {
-                _dbUsers.push({ email: SUPERADMIN_EMAIL, password: 'admin123', name: 'Boris Sargsyan', role: 'superadmin' });
+                _dbUsers.push({
+                    email: SUPERADMIN_EMAIL,
+                    password: 'admin123',
+                    name: 'Boris Sargsyan',
+                    role: 'superadmin'
+                });
                 saveUsers(_dbUsers);
             } else {
                 let changed = false;
-                if (_dbUsers[idx].role !== 'superadmin') { _dbUsers[idx].role = 'superadmin'; changed = true; }
-                if (_dbUsers[idx].password !== 'admin123') { _dbUsers[idx].password = 'admin123'; changed = true; }
-                if (!(_dbUsers[idx].name)) { _dbUsers[idx].name = 'Boris Sargsyan'; changed = true; }
+                if (_dbUsers[idx].role !== 'superadmin') {
+                    _dbUsers[idx].role = 'superadmin';
+                    changed = true;
+                }
+                if (_dbUsers[idx].password !== 'admin123') {
+                    _dbUsers[idx].password = 'admin123';
+                    changed = true;
+                }
+                if (!(_dbUsers[idx].name)) {
+                    _dbUsers[idx].name = 'Boris Sargsyan';
+                    changed = true;
+                }
                 if (changed) saveUsers(_dbUsers);
             }
         }
 
         // ── TOAST ──
-        function toast(msg, type = 'info') { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = (type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ') + ' ' + msg; $('toast-container').appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300) }, 3500) }
+        function toast(msg, type = 'info') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.innerHTML = (type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ') + ' ' + msg;
+            $('toast-container').appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(40px)';
+                setTimeout(() => t.remove(), 300)
+            }, 3500)
+        }
 
         // ── AUTH ──
-        function showAuthTab(tab) { $('login-form').classList.toggle('hidden', tab !== 'login'); $('register-form').classList.toggle('hidden', tab !== 'register'); $('tab-login').classList.toggle('active', tab === 'login'); $('tab-register').classList.toggle('active', tab === 'register'); document.querySelectorAll('.form-error').forEach(e => { e.classList.remove('show'); e.textContent = '' }) }
-        function selectRole(el, role) { selectedRole = role; document.querySelectorAll('.role-opt').forEach(e => e.classList.remove('active')); el.classList.add('active') }
-        function showErr(id, msg) { const e = $(id); e.textContent = msg; e.classList.add('show') }
-        function clearErrs() { document.querySelectorAll('.form-error').forEach(e => { e.classList.remove('show'); e.textContent = '' }) }
+        function showAuthTab(tab) {
+            $('login-form').classList.toggle('hidden', tab !== 'login');
+            $('register-form').classList.toggle('hidden', tab !== 'register');
+            $('tab-login').classList.toggle('active', tab === 'login');
+            $('tab-register').classList.toggle('active', tab === 'register');
+            document.querySelectorAll('.form-error').forEach(e => {
+                e.classList.remove('show');
+                e.textContent = ''
+            })
+        }
+
+        function selectRole(el, role) {
+            selectedRole = role;
+            document.querySelectorAll('.role-opt').forEach(e => e.classList.remove('active'));
+            el.classList.add('active')
+        }
+
+        function showErr(id, msg) {
+            const e = $(id);
+            e.textContent = msg;
+            e.classList.add('show')
+        }
+
+        function clearErrs() {
+            document.querySelectorAll('.form-error').forEach(e => {
+                e.classList.remove('show');
+                e.textContent = ''
+            })
+        }
 
         function handleLogin(ev) {
-            ev.preventDefault(); clearErrs();
-            const email = $('login-email').value.trim().toLowerCase(), pass = $('login-pass').value;
-            if (!validEmail(email)) { showErr('login-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed'); return }
+            ev.preventDefault();
+            clearErrs();
+            const email = $('login-email').value.trim().toLowerCase(),
+                pass = $('login-pass').value;
+            if (!validEmail(email)) {
+                showErr('login-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');
+                return
+            }
             // Fetch fresh data from Firebase to avoid cache issues
             _ref.users.once('value').then(function (snap) {
                 _dbUsers = _fbArr(snap);
-                const user = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email && u.password === pass);
+                const user = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email && u
+                    .password === pass);
                 if (!user) {
                     const exists = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email);
                     if (exists) showErr('login-pass-err', 'Invalid password. Account exists.');
@@ -1873,32 +2745,98 @@
         }
 
         function handleRegister(ev) {
-            ev.preventDefault(); clearErrs();
-            const name = $('reg-name').value.trim(), email = $('reg-email').value.trim().toLowerCase(), pass = $('reg-pass').value, pass2 = $('reg-pass2').value;
-            if (!name) { showErr('reg-name-err', 'Name is required'); return }
-            if (!validEmail(email)) { showErr('reg-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed'); return }
-            if (pass.length < 4) { showErr('reg-pass-err', 'Password must be at least 4 characters'); return }
-            if (pass !== pass2) { showErr('reg-pass2-err', 'Passwords do not match'); return }
+            ev.preventDefault();
+            clearErrs();
+            const name = $('reg-name').value.trim(),
+                email = $('reg-email').value.trim().toLowerCase(),
+                pass = $('reg-pass').value,
+                pass2 = $('reg-pass2').value;
+            if (!name) {
+                showErr('reg-name-err', 'Name is required');
+                return
+            }
+            if (!validEmail(email)) {
+                showErr('reg-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');
+                return
+            }
+            if (pass.length < 4) {
+                showErr('reg-pass-err', 'Password must be at least 4 characters');
+                return
+            }
+            if (pass !== pass2) {
+                showErr('reg-pass2-err', 'Passwords do not match');
+                return
+            }
             let users = getUsers();
-            if (users.find(u => u.email === email)) { showErr('reg-email-err', 'An account with this email already exists'); return }
+            if (users.find(u => u.email === email)) {
+                showErr('reg-email-err', 'An account with this email already exists');
+                return
+            }
             const role = email === SUPERADMIN_EMAIL ? 'superadmin' : selectedRole;
-            users.push({ email, password: pass, name, role }); saveUsers(users);
-            loginAs({ email, name, role }); toast('Welcome to Bolik, ' + name.split(' ')[0] + '!', 'success');
+            users.push({
+                email,
+                password: pass,
+                name,
+                role
+            });
+            saveUsers(users);
+            loginAs({
+                email,
+                name,
+                role
+            });
+            toast('Welcome to Bolik, ' + name.split(' ')[0] + '!', 'success');
         }
 
-        function loginAs(user) { currentUser = user; ls('bolik_session', user); $('landing-page').style.display = 'none'; $('auth-page').style.display = 'none'; $('app').style.display = 'block'; $('nav-user').textContent = user.name; cart = []; buildNav(); navigate(user.role === 'customer' ? 'menu' : 'pending') }
-        function logout() { currentUser = null; currentPage = null; ls('bolik_session', null); cart = []; $('app').style.display = 'none'; $('auth-page').style.display = 'flex'; $('login-form').reset(); $('register-form').reset(); showAuthTab('login') }
-        function goToAuth() { $('landing-page').style.display = 'none'; $('auth-page').style.display = 'flex'; }
+        function loginAs(user) {
+            currentUser = user;
+            ls('bolik_session', user);
+            $('landing-page').style.display = 'none';
+            $('auth-page').style.display = 'none';
+            $('app').style.display = 'block';
+            $('nav-user').textContent = user.name;
+            cart = [];
+            buildNav();
+            navigate(user.role === 'customer' ? 'menu' : 'pending')
+        }
+
+        function logout() {
+            currentUser = null;
+            currentPage = null;
+            ls('bolik_session', null);
+            cart = [];
+            $('app').style.display = 'none';
+            $('auth-page').style.display = 'flex';
+            $('login-form').reset();
+            $('register-form').reset();
+            showAuthTab('login')
+        }
+
+        function goToAuth() {
+            $('landing-page').style.display = 'none';
+            $('auth-page').style.display = 'flex';
+        }
+
+        function goToLanding() {
+            $('auth-page').style.display = 'none';
+            $('landing-page').style.display = 'flex';
+        }
 
         // ── NAV ──
         function buildNav() {
-            const nl = $('nav-links'); nl.innerHTML = ''; const cb = $('nav-cart');
+            const nl = $('nav-links');
+            nl.innerHTML = '';
+            const cb = $('nav-cart');
             if (currentUser.role === 'customer') {
-                nl.innerHTML = '<button onclick="navigate(\'menu\')" data-nav="menu">Menu</button><button onclick="navigate(\'myorders\')" data-nav="myorders">My Orders</button>';
-                cb.classList.remove('hidden'); updateCartBadge();
+                nl.innerHTML =
+                    '<button onclick="navigate(\'menu\')" data-nav="menu">Menu</button><button onclick="navigate(\'myorders\')" data-nav="myorders">My Orders</button>';
+                cb.classList.remove('hidden');
+                updateCartBadge();
             } else {
-                nl.innerHTML = '<button onclick="navigate(\'pending\')" data-nav="pending">Pending Orders</button><button onclick="navigate(\'emporders\')" data-nav="emporders">My Orders</button>';
-                if (currentUser.role === 'superadmin' || currentUser.role === 'admin') nl.innerHTML += '<button onclick="navigate(\'admin\')" data-nav="admin">Admin</button>';
+                nl.innerHTML =
+                    '<button onclick="navigate(\'pending\')" data-nav="pending">Pending Orders</button><button onclick="navigate(\'emporders\')" data-nav="emporders">My Orders</button>';
+                if (currentUser.role === 'superadmin' || currentUser.role === 'admin') nl.innerHTML +=
+                    '<button onclick="navigate(\'admin\')" data-nav="admin">Admin</button>';
                 cb.classList.add('hidden');
             }
         }
@@ -1948,25 +2886,23 @@
 
         function orderCardHTML(o, showTake) {
             const actions = [];
-
             if (showTake && o.status === 'pending') {
                 actions.push(`<button class="btn-take" onclick="takeOrder('${o.id}')">Take Order</button>`);
             }
-
             if (o.status === 'preparing' && o.takenBy === currentUser.email) {
                 actions.push(`<button class="btn-ready" onclick="markOrder('${o.id}','ready')">Mark Ready</button>`);
             }
-
             if (o.status === 'ready' && o.takenBy === currentUser.email) {
                 actions.push(`<button class="btn-deliver" onclick="markOrder('${o.id}','delivered')">Mark Delivered</button>`);
             }
 
-            const ss =
-                o.paymentMethod === 'card' &&
-                    o.paymentDetails &&
-                    o.paymentDetails.screenshot
-                    ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.id}')" title="View screenshot">`
-                    : '';
+            const ss = (o.paymentMethod === 'card' && o.paymentDetails?.screenshot)
+                ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.id}')" title="View screenshot">`
+                : '';
+
+            const bill = (o.paymentMethod === 'cash')
+                ? `֏${Number(o.paymentDetails?.billAmount || 0).toLocaleString()}`
+                : '';
 
             return `
             <div class="order-card">
@@ -1977,28 +2913,18 @@
                     </div>
                     <span class="status-badge ${o.status}">${o.status}</span>
                 </div>
-
                 <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
-
                 <div class="oc-items">
                     ${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}
                 </div>
-
                 <div class="oc-meta">
                     <span>📍 ${o.deliveryNote}</span>
-                    <span>
-                        💰 ${o.paymentMethod === 'cash'
-                    ? 'Cash ֏' + Number(o.paymentDetails?.billAmount || 0).toLocaleString()
-                    : 'Card'}
-                        ${ss}
-                    </span>
+                    <span>💰 ${o.paymentMethod === 'cash' ? 'Cash ' + bill : 'Card'} ${ss}</span>
                     ${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}
                 </div>
-
                 <div class="oc-total">${fmt(o.total)}</div>
                 ${actions.length ? `<div class="oc-actions">${actions.join('')}</div>` : ''}
-            </div>
-        `;
+            </div>`;
         }
 
         function showImg(oid) {
@@ -2107,15 +3033,18 @@
             if (currentPage === 'pending') {
                 const g = $('ep-grid');
                 if (g) {
-                    const orders = getOrders().filter(o => o.status === 'pending').sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                    if (!orders.length) g.innerHTML = '<div class="empty-state"><span class="es-icon">🎉</span><p>All caught up — no pending orders right now!</p></div>';
+                    const orders = getOrders().filter(o => o.status === 'pending').sort((a, b) => new Date(a
+                        .timestamp) - new Date(b.timestamp));
+                    if (!orders.length) g.innerHTML =
+                        '<div class="empty-state"><span class="es-icon">🎉</span><p>All caught up — no pending orders right now!</p></div>';
                     else g.innerHTML = orders.map(o => orderCardHTML(o, true)).join('');
                 } else renderPendingOrders(m);
             } else if (currentPage === 'emporders') {
                 const activeWrapper = $('emp-active');
                 const doneWrapper = $('emp-done');
                 if (activeWrapper && doneWrapper) {
-                    const orders = getOrders().filter(o => o.takenBy === currentUser.email || (o.status === 'pending' && !o.takenBy)).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    const orders = getOrders().filter(o => o.takenBy === currentUser.email || (o.status === 'pending' &&
+                        !o.takenBy)).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     const active = orders.filter(o => o.status !== 'delivered');
                     const done = orders.filter(o => o.status === 'delivered');
 
@@ -2125,18 +3054,24 @@
                         buttons[1].textContent = `Completed (${done.length})`;
                     }
 
-                    if (active.length) activeWrapper.innerHTML = active.map(o => orderCardHTML(o, o.status === 'pending')).join('');
-                    else activeWrapper.innerHTML = '<div class="empty-state"><span class="es-icon">📭</span><p>No active orders.</p></div>';
+                    if (active.length) activeWrapper.innerHTML = active.map(o => orderCardHTML(o, o.status ===
+                        'pending')).join('');
+                    else activeWrapper.innerHTML =
+                        '<div class="empty-state"><span class="es-icon">📭</span><p>No active orders.</p></div>';
 
                     if (done.length) doneWrapper.innerHTML = done.map(o => orderCardHTML(o, false)).join('');
-                    else doneWrapper.innerHTML = '<div class="empty-state"><span class="es-icon">✨</span><p>No completed orders yet.</p></div>';
+                    else doneWrapper.innerHTML =
+                        '<div class="empty-state"><span class="es-icon">✨</span><p>No completed orders yet.</p></div>';
                 } else renderEmpOrders(m);
             } else if (currentPage === 'myorders') {
                 const g = $('co-grid');
                 if (g) {
-                    const orders = getOrders().filter(o => o.customerEmail === currentUser.email).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; }
-                    else g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div><div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${_itemDetail(i)})`).join('<br>')}</div><div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div><div class="oc-total">${fmt(o.total)}</div></div>`).join('');
+                    const orders = getOrders().filter(o => o.customerEmail === currentUser.email).sort((a, b) =>
+                        new Date(b.timestamp) - new Date(a.timestamp));
+                    if (!orders.length) {
+                        g.innerHTML =
+                            '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>';
+                    } else g.innerHTML = orders.map(o => orderCardHTML(o, false)).join('');
                 } else renderCustomerOrders(m);
             } else if (currentPage === 'admin' && typeof adminTab !== 'undefined' && adminTab === 'history') {
                 const w = $('ah-table-wrap');
@@ -2187,29 +3122,49 @@
                 _dbBubbles = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
             }, err => console.warn('Bubbles listener:', err.message));
+
+            _ref.team.on('value', function (snap) {
+                _dbTeam = _fbArr(snap);
+                if (_firebaseReady) renderLandingTeam();
+            }, err => console.warn('Team listener:', err.message));
         }
 
         // ── MENU ──
         function renderMenu(m) {
             const products = getProducts();
-            m.innerHTML = '<h1 class="page-title">Our Menu</h1><p class="page-subtitle">Handcrafted bubble teas made fresh for you — choose your flavor, pick your bubbles, and we\'ll deliver to your door.</p><div class="menu-grid" id="menu-grid"></div>';
+            m.innerHTML =
+                '<h1 class="page-title">Our Menu</h1><p class="page-subtitle">Handcrafted bubble teas made fresh for you — choose your flavor, pick your bubbles, and we\'ll deliver to your door.</p><div class="menu-grid" id="menu-grid"></div>';
             const g = $('menu-grid');
-            if (!products.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">🧋</span><p>No drinks available at the moment. Check back soon!</p></div>'; return }
+            if (!products.length) {
+                g.innerHTML =
+                    '<div class="empty-state"><span class="es-icon">🧋</span><p>No drinks available at the moment. Check back soon!</p></div>';
+                return
+            }
             products.forEach((p, i) => {
-                const c = document.createElement('div'); c.className = 'menu-card'; c.style.animationDelay = i * .06 + 's';
-                c.innerHTML = `<span class="tag">${p.tag}</span><span class="emoji">${p.emoji}</span><h3>${p.name}</h3><p class="desc">${p.description}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><button class="btn-add" onclick="event.stopPropagation();openCustomize(${p.id})">Customize & Add</button></div>`;
-                c.onclick = () => openCustomize(p.id); g.appendChild(c);
+                const c = document.createElement('div');
+                c.className = 'menu-card';
+                c.style.animationDelay = i * .06 + 's';
+                c.innerHTML =
+                    `<span class="tag">${p.tag}</span><span class="emoji">${p.emoji}</span><h3>${p.name}</h3><p class="desc">${p.description}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><button class="btn-add" onclick="event.stopPropagation();openCustomize(${p.id})">Customize & Add</button></div>`;
+                c.onclick = () => openCustomize(p.id);
+                g.appendChild(c);
             });
         }
 
         // ── CUSTOMIZE MODAL ──
         function openCustomize(pid) {
-            const p = getProducts().find(x => x.id === pid); if (!p) return;
-            const ov = $('modal-overlay'); ov.classList.remove('hidden');
+            const p = getProducts().find(x => x.id === pid);
+            if (!p) return;
+            const ov = $('modal-overlay');
+            ov.classList.remove('hidden');
             const currentSyrups = getSyrups();
             const currentBubbles = getBubbles();
-            let selSyrup = currentSyrups.find(s => p.name.toLowerCase().includes(s.toLowerCase().split(' ')[0])) || currentSyrups[0];
-            let selBubbles = []; let bubbleAmount = 'standard'; let qty = 1;
+            let selSyrup = currentSyrups.find(s => p.name.toLowerCase().includes(s.toLowerCase().split(' ')[0])) ||
+                currentSyrups[0];
+            let selBubbles = [];
+            let bubbleAmount = 'standard';
+            let qty = 1;
+
             function render() {
                 const totalPrice = (p.price + (bubbleAmount === 'extra' ? 400 : 0)) * qty;
                 ov.innerHTML = `<div class="modal"><button class="modal-close" onclick="document.getElementById('modal-overlay').classList.add('hidden')">✕</button>
@@ -2226,10 +3181,23 @@
     <div class="qty-row"><label>Quantity</label><div class="qty-controls"><button onclick="window._cQty(-1)">−</button><span>${qty}</span><button onclick="window._cQty(1)">+</button></div></div>
     <button class="btn-primary" onclick="window._cAdd()">Add to Cart — ${fmt(totalPrice)}</button></div>`;
             }
-            window._cSyrup = s => { selSyrup = s; render() };
-            window._cBub = t => { const i = selBubbles.indexOf(t); i >= 0 ? selBubbles.splice(i, 1) : selBubbles.push(t); render() };
-            window._cAmount = a => { bubbleAmount = a; render() };
-            window._cQty = d => { qty = Math.max(1, qty + d); render() };
+            window._cSyrup = s => {
+                selSyrup = s;
+                render()
+            };
+            window._cBub = t => {
+                const i = selBubbles.indexOf(t);
+                i >= 0 ? selBubbles.splice(i, 1) : selBubbles.push(t);
+                render()
+            };
+            window._cAmount = a => {
+                bubbleAmount = a;
+                render()
+            };
+            window._cQty = d => {
+                qty = Math.max(1, qty + d);
+                render()
+            };
             window._cAdd = () => {
                 const finalUnitPrice = p.price + (bubbleAmount === 'extra' ? 400 : 0);
                 cart.push({
@@ -2242,79 +3210,232 @@
                     quantity: qty,
                     unitPrice: finalUnitPrice
                 });
-                updateCartBadge(); ov.classList.add('hidden'); toast(p.name + ' added to cart', 'success')
+                updateCartBadge();
+                ov.classList.add('hidden');
+                toast(p.name + ' added to cart', 'success')
             };
             render();
         }
 
         // ── CART ──
-        function toggleCart() { const p = $('cart-panel'), o = $('cart-overlay'); p.classList.toggle('open'); o.classList.toggle('hidden') }
-        function closeCart() { $('cart-panel').classList.remove('open'); $('cart-overlay').classList.add('hidden') }
-        function updateCartBadge() { const b = $('cart-badge'), n = cart.reduce((s, i) => s + i.quantity, 0); b.textContent = n; b.classList.toggle('hidden', n === 0); renderCartItems() }
-        function renderCartItems() {
-            const ci = $('cart-items'), cf = $('cart-footer');
-            if (!cart.length) { ci.innerHTML = '<div class="cart-empty"><span class="ce-icon">🛒</span><p>Your cart is empty.<br>Add something delicious!</p></div>'; cf.innerHTML = ''; return }
-            ci.innerHTML = cart.map((item, i) => `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${_itemDetail(item)}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`).join('');
-            const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-            cf.innerHTML = `<div class="cart-total"><span>Total</span><span class="amount">${fmt(total)}</span></div><button class="btn-primary" onclick="closeCart();navigate('checkout')">Proceed to Checkout</button>`;
+        function toggleCart() {
+            const p = $('cart-panel'),
+                o = $('cart-overlay');
+            p.classList.toggle('open');
+            o.classList.toggle('hidden')
         }
-        function cartQty(i, d) { cart[i].quantity = Math.max(1, cart[i].quantity + d); updateCartBadge() }
-        function cartRemove(i) { const n = cart[i].productName; cart.splice(i, 1); updateCartBadge(); toast(n + ' removed', 'info') }
+
+        function closeCart() {
+            $('cart-panel').classList.remove('open');
+            $('cart-overlay').classList.add('hidden')
+        }
+
+        function updateCartBadge() {
+            const b = $('cart-badge'),
+                n = cart.reduce((s, i) => s + i.quantity, 0);
+            b.textContent = n;
+            b.classList.toggle('hidden', n === 0);
+            renderCartItems()
+        }
+
+        function renderCartItems() {
+            const ci = $('cart-items'),
+                cf = $('cart-footer');
+            if (!cart.length) {
+                ci.innerHTML =
+                    '<div class="cart-empty"><span class="ce-icon">🛒</span><p>Your cart is empty.<br>Add something delicious!</p></div>';
+                cf.innerHTML = '';
+                return
+            }
+            ci.innerHTML = cart.map((item, i) =>
+                `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${_itemDetail(item)}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`
+            ).join('');
+            const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+            cf.innerHTML =
+                `<div class="cart-total"><span>Total</span><span class="amount">${fmt(total)}</span></div><button class="btn-primary" onclick="closeCart();navigate('checkout')">Proceed to Checkout</button>`;
+        }
+
+        function cartQty(i, d) {
+            cart[i].quantity = Math.max(1, cart[i].quantity + d);
+            updateCartBadge()
+        }
+
+        function cartRemove(i) {
+            const n = cart[i].productName;
+            cart.splice(i, 1);
+            updateCartBadge();
+            toast(n + ' removed', 'info')
+        }
 
         // ── CHECKOUT ──
-        let payMethod = 'cash', payScreenshot = null, cashAmount = '';
+        let payMethod = 'cash',
+            payScreenshot = null,
+            cashAmount = '';
+
+        let deliveryOption = 'delivery';
+        const DELIVERY_FEE = 200;
+
         function renderCheckout(m) {
-            if (!cart.length) { navigate('menu'); toast('Your cart is empty', 'error'); return }
-            const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0); payScreenshot = null; cashAmount = ''; payMethod = 'cash';
+            if (!cart.length) {
+                navigate('menu');
+                toast('Your cart is empty', 'error');
+                return
+            }
+            const totalItems = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+            const finalTotal = totalItems + (deliveryOption === 'delivery' ? DELIVERY_FEE : 0);
+            payScreenshot = null;
+            cashAmount = '';
+            payMethod = 'cash';
+            
             m.innerHTML = `<div class="checkout-card"><h2>Checkout</h2>
     <div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${i.productName} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${_itemDetail(i)})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
-    <div class="divider"></div><div class="osi"><strong>Total</strong><strong style="color:var(--amber);font-family:'Playfair Display',serif;font-size:1.2rem">${fmt(total)}</strong></div></div>
-    <div class="form-group"><label>Delivery Location</label><input id="co-note" placeholder="e.g. Library Room 2, Dorm 14" required><div class="form-error" id="co-note-err"></div></div>
+    ${deliveryOption === 'delivery' ? `<div class="osi"><span class="osi-name">🚚 Delivery Fee</span><span class="osi-price">${fmt(DELIVERY_FEE)}</span></div>` : ''}
+    <div class="divider"></div>
+    <div class="osi"><strong>Total</strong><strong style="color:var(--amber);font-family:'Playfair Display',serif;font-size:1.4rem">${fmt(finalTotal)}</strong></div></div>
+    
+    <div class="form-group"><label>How would you like to receive your order?</label>
+        <div class="payment-tabs">
+            <button class="${deliveryOption === 'pickup' ? 'active' : ''}" onclick="setDelivery('pickup')">🥡 Pickup</button>
+            <button class="${deliveryOption === 'delivery' ? 'active' : ''}" onclick="setDelivery('delivery')">🚚 Delivery</button>  
+        </div>
+    </div>
+
+    <div id="delivery-info" class="${deliveryOption === 'delivery' ? '' : 'hidden'}">
+        <div class="form-group"><label>Delivery Location</label><input id="co-note" placeholder="e.g. MS2 Common Room, Vardenis Boys, Adriatic..." value=""><div class="form-error" id="co-note-err"></div></div>
+    </div>
+    
     <div class="form-group"><label>Payment Method</label>
-    <div class="payment-tabs"><button class="active" id="pt-cash" onclick="switchPay('cash')">💵 Cash</button><button id="pt-card" onclick="switchPay('card')">💳 Card Transfer</button></div></div>
+        <div class="payment-tabs">
+            <button class="active" id="pt-cash" onclick="switchPay('cash')">💵 Cash</button>
+            <button id="pt-card" onclick="switchPay('card')">💳 Card Transfer</button>
+        </div>
+    </div>
     <div id="pay-details"></div>
     <div class="form-error" id="co-pay-err" style="margin-bottom:12px"></div>
     <button class="btn-primary" onclick="placeOrder()">Place Order</button></div>`;
             renderPayDetails();
         }
-        function switchPay(m) { payMethod = m; $('pt-cash').classList.toggle('active', m === 'cash'); $('pt-card').classList.toggle('active', m === 'card'); payScreenshot = null; cashAmount = ''; clearErrs(); renderPayDetails() }
+
+        function setDelivery(opt) {
+            deliveryOption = opt;
+            renderCheckout($('main-content'));
+        }
+
+        function switchPay(m) {
+            payMethod = m;
+            $('pt-cash').classList.toggle('active', m === 'cash');
+            $('pt-card').classList.toggle('active', m === 'card');
+            payScreenshot = null;
+            cashAmount = '';
+            clearErrs();
+            renderPayDetails()
+        }
+
         function renderPayDetails() {
             const d = $('pay-details');
             if (payMethod === 'cash') {
-                const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-                const mkBtn = (val) => `<button type="button" ${val < total ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="setCash(${val})">֏${val.toLocaleString()}</button>`;
+                const totalItems = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+                const total = totalItems + (deliveryOption === 'delivery' ? DELIVERY_FEE : 0);
+                const mkBtn = (val) =>
+                    `<button type="button" ${val < total ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="setCash(${val})">֏${val.toLocaleString()}</button>`;
                 d.innerHTML = `<div class="form-group"><label>Bill amount you will hand over</label><input type="number" id="co-cash" placeholder="e.g. ${total}" value="${cashAmount}" oninput="cashAmount=this.value" min="${total}">
     <div class="cash-amounts">${mkBtn(1000)}${mkBtn(2000)}${mkBtn(5000)}${mkBtn(10000)}${mkBtn(20000)}</div></div>`;
             } else {
-                d.innerHTML = `<div class="card-display">${CARD_NUMBER}</div><p style="text-align:center;color:var(--taupe);font-size:.85rem;margin-bottom:16px">Transfer the total and upload a screenshot as proof</p>
+                d.innerHTML =
+                    `<div class="card-display">${CARD_NUMBER}</div><p style="text-align:center;color:var(--taupe);font-size:.85rem;margin-bottom:16px">Transfer the total and upload a screenshot as proof</p>
     <div class="upload-area" id="upload-area"><input type="file" accept="image/*" onchange="handleScreenshot(event)"><span id="upload-text">📎 Click or drag to upload screenshot</span><br><img id="upload-preview" class="preview" style="display:none"></div>`;
             }
         }
-        function setCash(v) { cashAmount = v; const e = $('co-cash'); if (e) e.value = v }
-        function handleScreenshot(ev) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { payScreenshot = e.target.result; const p = $('upload-preview'); if (p) { p.src = payScreenshot; p.style.display = 'block' } const t = $('upload-text'); if (t) t.textContent = '✓ Screenshot uploaded' }; r.readAsDataURL(f) }
+
+        function setCash(v) {
+            cashAmount = v;
+            const e = $('co-cash');
+            if (e) e.value = v
+        }
+
+        function handleScreenshot(ev) {
+            const f = ev.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = e => {
+                payScreenshot = e.target.result;
+                const p = $('upload-preview');
+                if (p) {
+                    p.src = payScreenshot;
+                    p.style.display = 'block'
+                }
+                const t = $('upload-text');
+                if (t) t.textContent = '✓ Screenshot uploaded'
+            };
+            r.readAsDataURL(f)
+        }
 
         function placeOrder() {
-            clearErrs(); const note = $('co-note').value.trim();
-            if (!note) { showErr('co-note-err', 'Please enter a delivery location'); return }
-            const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-            if (payMethod === 'cash' && (!cashAmount || Number(cashAmount) < total)) { showErr('co-pay-err', 'Please enter a bill amount of at least ֏' + total.toLocaleString()); return }
-            if (payMethod === 'card' && !payScreenshot) { showErr('co-pay-err', 'Please upload a payment screenshot'); return }
+            clearErrs();
+            let note = 'Pickup';
+            if (deliveryOption === 'delivery') {
+                note = $('co-note').value.trim();
+                if (!note) {
+                    showErr('co-note-err', 'Please enter a delivery location');
+                    return;
+                }
+            }
+            const totalItems = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+            const total = totalItems + (deliveryOption === 'delivery' ? DELIVERY_FEE : 0);
+            if (payMethod === 'cash' && (!cashAmount || Number(cashAmount) < total)) {
+                showErr('co-pay-err', 'Please enter a bill amount of at least ֏' + total.toLocaleString());
+                return;
+            }
+            if (payMethod === 'card' && !payScreenshot) {
+                showErr('co-pay-err', 'Please upload a payment screenshot');
+                return;
+            }
             const order = {
-                id: genId(), customerEmail: currentUser.email, customerName: currentUser.name,
-                items: cart.map(i => ({ name: i.productName, emoji: i.emoji, syrup: i.syrup, bubbles: [...i.bubbles], bubbleAmount: i.bubbleAmount, quantity: i.quantity, unitPrice: i.unitPrice })),
-                total, deliveryNote: note, paymentMethod: payMethod,
-                paymentDetails: payMethod === 'cash' ? { billAmount: Number(cashAmount) } : { screenshot: payScreenshot },
-                status: 'pending', timestamp: new Date().toISOString(), takenBy: null
+                id: genId(),
+                customerEmail: currentUser.email,
+                customerName: currentUser.name,
+                items: cart.map(i => ({
+                    name: i.productName,
+                    emoji: i.emoji,
+                    syrup: i.syrup,
+                    bubbles: [...i.bubbles],
+                    bubbleAmount: i.bubbleAmount,
+                    quantity: i.quantity,
+                    unitPrice: i.unitPrice
+                })),
+                total,
+                deliveryFee: deliveryOption === 'delivery' ? DELIVERY_FEE : 0,
+                deliveryType: deliveryOption,
+                deliveryNote: note,
+                paymentMethod: payMethod,
+                paymentDetails: payMethod === 'cash' ? {
+                    billAmount: Number(cashAmount)
+                } : {
+                    screenshot: payScreenshot
+                },
+                status: 'pending',
+                timestamp: new Date().toISOString(),
+                takenBy: null
             };
-            const orders = getOrders(); orders.push(order); saveOrders(orders);
-            cart = []; updateCartBadge(); window._lastOrderId = order.id; navigate('confirmation');
+            const orders = getOrders();
+            orders.push(order);
+            saveOrders(orders);
+            cart = [];
+            updateCartBadge();
+            window._lastOrderId = order.id;
+            navigate('confirmation');
         }
 
         // ── CONFIRMATION ──
         function renderConfirmation(m) {
-            const orders = getOrders(), o = orders.find(x => x.id === window._lastOrderId);
-            if (!o) { navigate('menu'); return }
-            m.innerHTML = `<div class="confirmation"><div class="check">✓</div><h1 style="margin-bottom:8px">Order Placed!</h1>
+            const orders = getOrders(),
+                o = orders.find(x => x.id === window._lastOrderId);
+            if (!o) {
+                navigate('menu');
+                return
+            }
+            m.innerHTML =
+                `<div class="confirmation"><div class="check">✓</div><h1 style="margin-bottom:8px">Order Placed!</h1>
     <p style="color:var(--taupe);margin-bottom:24px">Your drink is being prepared with care</p>
     <div style="background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);text-align:left;max-width:460px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;margin-bottom:16px"><span style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--amber)">${o.id}</span><span class="status-badge pending">Pending</span></div>
@@ -2328,206 +3449,19 @@
 
         // ── CUSTOMER ORDERS ──
         function renderCustomerOrders(m) {
-            const orders = getOrders().filter(o => o.customerEmail === currentUser.email).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            m.innerHTML = `<h1 class="page-title">My Orders</h1><p class="page-subtitle">Track the status of your bubble tea orders</p><div class="orders-grid" id="co-grid"></div>`;
+            const orders = getOrders().filter(o => o.customerEmail === currentUser.email).sort((a, b) => new Date(b
+                .timestamp) - new Date(a.timestamp));
+            m.innerHTML =
+                `<h1 class="page-title">My Orders</h1><p class="page-subtitle">Track the status of your bubble tea orders</p><div class="orders-grid" id="co-grid"></div>`;
             const g = $('co-grid');
-            if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>'; return }
-            g.innerHTML = orders.map(o => `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
-    <div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} (${_itemDetail(i)})`).join('<br>')}</div>
-    <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}</span></div>
-    <div class="oc-total">${fmt(o.total)}</div></div>`).join('');
-        }
-
-        // ── EMPLOYEE: PENDING ──
-        function renderPendingOrders(m) {
-            const orders = getOrders().filter(o => o.status === 'pending').sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            m.innerHTML = `<h1 class="page-title">Pending Orders</h1><p class="page-subtitle">Claim orders and start preparing delicious drinks</p><div class="orders-grid" id="ep-grid"></div>`;
-            const g = $('ep-grid');
-            if (!orders.length) { g.innerHTML = '<div class="empty-state"><span class="es-icon">🎉</span><p>All caught up — no pending orders right now!</p></div>'; return }
-            g.innerHTML = orders.map(o => orderCardHTML(o, true)).join('');
-        }
-        function orderCardHTML(o, showTake) {
-            const actions = [];
-            if (showTake && o.status === 'pending') actions.push(`<button class="btn-take" onclick="takeOrder('${o.id}')">Take Order</button>`);
-            if (o.status === 'preparing' && o.takenBy === currentUser.email) actions.push(`<button class="btn-ready" onclick="markOrder('${o.id}','ready')">Mark Ready</button>`);
-            if (o.status === 'ready' && o.takenBy === currentUser.email) actions.push(`<button class="btn-deliver" onclick="markOrder('${o.id}','delivered')">Mark Delivered</button>`);
-            const ss = o.paymentMethod === 'card' && o.paymentDetails.screenshot ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.paymentDetails.screenshot.substring(0, 50)}','${o.id}')" title="View screenshot">` : '';
-            return `<div class="order-card"><div class="oc-header"><div><span class="oc-id">${o.id}</span><div class="oc-time">${fmtDate(o.timestamp)}</div></div><span class="status-badge ${o.status}">${o.status}</span></div>
-    <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
-    <div class="oc-items">${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}</div>
-    <div class="oc-meta"><span>📍 ${o.deliveryNote}</span><span>💰 ${o.paymentMethod === 'cash' ? 'Cash ֏' + Number(o.paymentDetails.billAmount || 0).toLocaleString() : 'Card'} ${ss}</span>${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}</div>
-    <div class="oc-total">${fmt(o.total)}</div>
-    ${actions.length ? '<div class="oc-actions">' + actions.join('') + '</div>' : ''}</div>`;
-        }
-        function showImg(prefix, oid) { const o = getOrders().find(x => x.id === oid); if (!o || !o.paymentDetails.screenshot) return; const m = $('img-modal'); m.innerHTML = `<img src="${o.paymentDetails.screenshot}">`; m.classList.remove('hidden') }
-        function takeOrder(id) { let orders = getOrders(); const o = orders.find(x => x.id === id); if (!o || o.status !== 'pending') return; o.status = 'preparing'; o.takenBy = currentUser.email; saveOrders(orders); toast('Order ' + id + ' claimed!', 'success'); navigate('emporders') }
-        function markOrder(id, status) { let orders = getOrders(); const o = orders.find(x => x.id === id); if (!o) return; o.status = status; saveOrders(orders); toast('Order ' + id + ' marked as ' + status, 'success'); navigate('emporders') }
-
-        // ── EMPLOYEE: MY ORDERS ──
-        // ── EMPLOYEE: PENDING ──
-        function renderPendingOrders(m) {
-            const orders = getOrders()
-                .filter(o => o.status === 'pending')
-                .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-            m.innerHTML = `
-            <h1 class="page-title">Pending Orders</h1>
-            <p class="page-subtitle">Claim orders and start preparing delicious drinks</p>
-            <div class="orders-grid" id="ep-grid"></div>
-        `;
-
-            const g = $('ep-grid');
-
             if (!orders.length) {
-                g.innerHTML = `
-                <div class="empty-state">
-                    <span class="es-icon">🎉</span>
-                    <p>All caught up — no pending orders right now!</p>
-                </div>
-            `;
-                return;
+                g.innerHTML =
+                    '<div class="empty-state"><span class="es-icon">📋</span><p>No orders yet — browse our menu to get started!</p></div>';
+                return
             }
-
-            g.innerHTML = orders.map(o => orderCardHTML(o, true)).join('');
+            g.innerHTML = orders.map(o => orderCardHTML(o, false)).join('');
         }
 
-        function orderCardHTML(o, showTake) {
-            const actions = [];
-
-            if (showTake && o.status === 'pending') {
-                actions.push(`<button class="btn-take" onclick="takeOrder('${o.id}')">Take Order</button>`);
-            }
-
-            if (o.status === 'preparing' && o.takenBy === currentUser.email) {
-                actions.push(`<button class="btn-ready" onclick="markOrder('${o.id}','ready')">Mark Ready</button>`);
-            }
-
-            if (o.status === 'ready' && o.takenBy === currentUser.email) {
-                actions.push(`<button class="btn-deliver" onclick="markOrder('${o.id}','delivered')">Mark Delivered</button>`);
-            }
-
-            const ss =
-                o.paymentMethod === 'card' &&
-                    o.paymentDetails &&
-                    o.paymentDetails.screenshot
-                    ? `<img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="event.stopPropagation();showImg('${o.id}')" title="View screenshot">`
-                    : '';
-
-            return `
-            <div class="order-card">
-                <div class="oc-header">
-                    <div>
-                        <span class="oc-id">${o.id}</span>
-                        <div class="oc-time">${fmtDate(o.timestamp)}</div>
-                    </div>
-                    <span class="status-badge ${o.status}">${o.status}</span>
-                </div>
-
-                <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
-
-                <div class="oc-items">
-                    ${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}
-            ).join('<br>')}
-                </div>
-
-                <div class="oc-meta">
-                    <span>📍 ${o.deliveryNote}</span>
-                    <span>
-                        💰 ${o.paymentMethod === 'cash'
-                    ? 'Cash ֏' + Number((o.paymentDetails && o.paymentDetails.billAmount) || 0).toLocaleString()
-                    : 'Card'}
-                        ${ss}
-                    </span>
-                    ${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}
-                </div>
-
-                <div class="oc-total">${fmt(o.total)}</div>
-                ${actions.length ? `<div class="oc-actions">${actions.join('')}</div>` : ''}
-            </div>
-        `;
-        }
-
-        function showImg(oid) {
-            const o = getOrders().find(x => x.id === oid);
-            if (!o || !o.paymentDetails || !o.paymentDetails.screenshot) return;
-
-            const m = $('img-modal');
-            m.innerHTML = `<img src="${o.paymentDetails.screenshot}">`;
-            m.classList.remove('hidden');
-        }
-
-        function takeOrder(id) {
-            let orders = getOrders();
-            const o = orders.find(x => x.id === id);
-
-            if (!o || o.status !== 'pending') return;
-
-            o.status = 'preparing';
-            o.takenBy = currentUser.email;
-
-            saveOrders(orders);
-            toast('Order ' + id + ' claimed!', 'success');
-            refreshOrdersUI();
-        }
-
-        function markOrder(id, status) {
-            let orders = getOrders();
-            const o = orders.find(x => x.id === id);
-
-            if (!o) return;
-
-            o.status = status;
-            saveOrders(orders);
-            toast('Order ' + id + ' marked as ' + status, 'success');
-            refreshOrdersUI();
-        }
-
-        // ── EMPLOYEE: MY ORDERS ──
-        function renderEmpOrders(m) {
-            const orders = getOrders()
-                .filter(o =>
-                    o.takenBy === currentUser.email ||
-                    (o.status === 'pending' && !o.takenBy)
-                )
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-            const active = orders.filter(o => o.status !== 'delivered');
-            const done = orders.filter(o => o.status === 'delivered');
-
-            m.innerHTML = `
-            <h1 class="page-title">My Orders</h1>
-            <p class="page-subtitle">Orders you've claimed and new pending orders</p>
-
-            <div class="tabs-row">
-                <button class="active" onclick="empTab(this,'emp-active')">
-                    Active (${active.length})
-                </button>
-                <button onclick="empTab(this,'emp-done')">
-                    Completed (${done.length})
-                </button>
-            </div>
-
-            <div id="emp-active" class="orders-grid">
-                ${active.length
-                    ? active.map(o => orderCardHTML(o, o.status === 'pending')).join('')
-                    : `<div class="empty-state">
-                            <span class="es-icon">📭</span>
-                            <p>No active orders.</p>
-                        </div>`
-                }
-            </div>
-
-            <div id="emp-done" class="orders-grid hidden">
-                ${done.length
-                    ? done.map(o => orderCardHTML(o, false)).join('')
-                    : `<div class="empty-state">
-                            <span class="es-icon">✨</span>
-                            <p>No completed orders yet.</p>
-                        </div>`
-                }
-            </div>
-        `;
-        }
 
         function empTab(btn, id) {
             btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -2543,45 +3477,83 @@
 
         // ── ADMIN ──
         let adminTab = 'history';
+
         function renderAdmin(m) {
             m.innerHTML = `<h1 class="page-title">Admin Panel</h1><p class="page-subtitle">Manage orders, products, accounts, and track revenue</p>
-    <div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'bubbles' ? 'active' : ''}" onclick="adminNav('bubbles')">🫧 Bubbles</button>${currentUser.role === 'superadmin' ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}</div>
+    <div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'bubbles' ? 'active' : ''}" onclick="adminNav('bubbles')">🫧 Bubbles</button>${currentUser.role === 'superadmin' ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}<button class="${adminTab === 'team' ? 'active' : ''}" onclick="adminNav('team')">Team Members</button></div>
     <div id="admin-content"></div>`;
             renderAdminTab();
         }
-        function adminNav(t) { adminTab = t; document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); renderAdminTab() }
+
+        function adminNav(t) {
+            adminTab = t;
+            document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderAdminTab()
+        }
+
         function renderAdminTab() {
             if (currentUser.role !== 'superadmin' && adminTab === 'accounts') adminTab = 'history';
-            const c = $('admin-content'); if (!c) return;
+            const c = $('admin-content');
+            if (!c) return;
             if (adminTab === 'history') renderAdminHistory(c);
             else if (adminTab === 'profit') renderAdminProfit(c);
             else if (adminTab === 'products') renderAdminProducts(c);
             else if (adminTab === 'syrups') renderAdminSyrups(c);
             else if (adminTab === 'bubbles') renderAdminBubbles(c);
             else if (adminTab === 'accounts') renderAdminAccounts(c);
+            else if (adminTab === 'team') renderAdminTeam(c);
         }
 
         function renderAdminHistory(c) {
             let orders = getOrders().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            c.innerHTML = `<div class="section-header"><h3>All Orders (${orders.length})</h3><div class="filter-row"><label style="font-size:.85rem">Filter by date:</label><input type="date" id="ah-date" onchange="filterHistory()" style="width:auto"></div></div><div id="ah-table-wrap"></div>`;
-            window._allOrders = orders; renderHistoryTable(orders);
+            c.innerHTML =
+                `<div class="section-header"><h3>All Orders (${orders.length})</h3><div class="filter-row"><label style="font-size:.85rem">Filter by date:</label><input type="date" id="ah-date" onchange="filterHistory()" style="width:auto"></div></div><div id="ah-table-wrap"></div>`;
+            window._allOrders = orders;
+            renderHistoryTable(orders);
         }
-        window.filterHistory = function () { const d = $('ah-date').value; const orders = d ? window._allOrders.filter(o => dateKey(o.timestamp) === d) : window._allOrders; renderHistoryTable(orders) };
+        window.filterHistory = function () {
+            const d = $('ah-date').value;
+            const orders = d ? window._allOrders.filter(o => dateKey(o.timestamp) === d) : window._allOrders;
+            renderHistoryTable(orders)
+        };
+
         function renderHistoryTable(orders) {
             const w = $('ah-table-wrap');
-            if (!orders.length) { w.innerHTML = '<div class="empty-state"><p>No orders found.</p></div>'; return }
-            w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date & Time</th><th>Action</th></tr></thead><tbody>
-    ${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:.75rem">${o.customerEmail}</span></td><td>${(o.items || []).map(i => i.emoji + ' ' + i.name + ' x' + i.quantity).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('x','${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:.8rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
+            if (!orders.length) {
+                w.innerHTML = '<div class="empty-state"><p>No orders found.</p></div>';
+                return
+            }
+            w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Customer</th><th>Location</th><th>Items</th><th>Total</th><th>Pay</th><th>Status</th><th>Time</th><th>Action</th></tr></thead><tbody>
+    ${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:0.75rem">${o.customerEmail}</span></td><td style="font-size:0.85rem">${o.deliveryNote}</td><td style="font-size:0.85rem">${(o.items || []).map(i => i.emoji + ' ' + i.name).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails?.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:0.75rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
     </tbody></table></div>`;
         }
-        function deleteOrder(id) { if (!confirm('Are you sure you want to delete this order entirely?')) return; let orders = getOrders().filter(o => o.id !== id); saveOrders(orders); toast('Order deleted forever', 'info'); renderAdminTab() }
+
+        function deleteOrder(id) {
+            if (!confirm('Are you sure you want to delete this order entirely?')) return;
+            let orders = getOrders().filter(o => o.id !== id);
+            saveOrders(orders);
+            toast('Order deleted forever', 'info');
+            renderAdminTab()
+        }
 
         function renderAdminProfit(c) {
             const orders = getOrders().filter(o => o.status === 'delivered');
-            const byDate = {}; orders.forEach(o => { const d = dateKey(o.timestamp); if (!byDate[d]) byDate[d] = { date: d, count: 0, revenue: 0 }; byDate[d].count++; byDate[d].revenue += o.total });
+            const byDate = {};
+            orders.forEach(o => {
+                const d = dateKey(o.timestamp);
+                if (!byDate[d]) byDate[d] = {
+                    date: d,
+                    count: 0,
+                    revenue: 0
+                };
+                byDate[d].count++;
+                byDate[d].revenue += o.total
+            });
             const rows = Object.values(byDate).sort((a, b) => b.date.localeCompare(a.date));
             const totalRev = rows.reduce((s, r) => s + r.revenue, 0);
-            c.innerHTML = `<div style="display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap">
+            c.innerHTML =
+                `<div style="display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap">
     <div style="background:var(--surface);border-radius:16px;padding:24px 32px;box-shadow:var(--shadow);flex:1;min-width:200px"><p style="color:var(--taupe);font-size:.85rem;margin-bottom:4px">Total Revenue</p><h2 style="color:var(--amber);font-size:2rem">${fmt(totalRev)}</h2></div>
     <div style="background:var(--surface);border-radius:16px;padding:24px 32px;box-shadow:var(--shadow);flex:1;min-width:200px"><p style="color:var(--taupe);font-size:.85rem;margin-bottom:4px">Completed Orders</p><h2 style="font-size:2rem">${orders.length}</h2></div>
     <div style="background:var(--surface);border-radius:16px;padding:24px 32px;box-shadow:var(--shadow);flex:1;min-width:200px"><p style="color:var(--taupe);font-size:.85rem;margin-bottom:4px">Days Active</p><h2 style="font-size:2rem">${rows.length}</h2></div></div>
@@ -2607,18 +3579,48 @@
     <span style="font-size:2.5rem">${p.emoji}</span><div style="flex:1"><strong>${p.name}</strong><br><span style="color:var(--taupe);font-size:.85rem">${p.description}</span><br><span style="color:var(--amber);font-weight:600">${fmt(p.price)}</span> · <span class="status-badge pending" style="font-size:.7rem">${p.tag}</span></div>
     <button class="btn-danger btn-sm" onclick="deleteProduct(${p.id})">Delete</button></div>`).join('')}</div>`;
         }
+
         function addProduct() {
-            clearErrs(); const name = $('ap-name').value.trim(), emoji = $('ap-emoji').value.trim(), price = Number($('ap-price').value), desc = $('ap-desc').value.trim(), tag = $('ap-tag').value.trim();
-            if (!name || !emoji || !price || !desc || !tag) { showErr('ap-err', 'All fields are required'); return }
-            if (price <= 0) { showErr('ap-err', 'Price must be greater than 0'); return }
-            const products = getProducts(); const id = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-            products.push({ id, name, emoji, description: desc, price, tag }); saveProducts(products); toast(name + ' added to menu', 'success'); renderAdminTab();
+            clearErrs();
+            const name = $('ap-name').value.trim(),
+                emoji = $('ap-emoji').value.trim(),
+                price = Number($('ap-price').value),
+                desc = $('ap-desc').value.trim(),
+                tag = $('ap-tag').value.trim();
+            if (!name || !emoji || !price || !desc || !tag) {
+                showErr('ap-err', 'All fields are required');
+                return
+            }
+            if (price <= 0) {
+                showErr('ap-err', 'Price must be greater than 0');
+                return
+            }
+            const products = getProducts();
+            const id = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+            products.push({
+                id,
+                name,
+                emoji,
+                description: desc,
+                price,
+                tag
+            });
+            saveProducts(products);
+            toast(name + ' added to menu', 'success');
+            renderAdminTab();
         }
-        function deleteProduct(id) { const products = getProducts().filter(p => p.id !== id); saveProducts(products); toast('Product removed', 'info'); renderAdminTab() }
+
+        function deleteProduct(id) {
+            const products = getProducts().filter(p => p.id !== id);
+            saveProducts(products);
+            toast('Product removed', 'info');
+            renderAdminTab()
+        }
 
         function renderAdminSyrups(c) {
             const syrups = getSyrups();
-            c.innerHTML = `<div class="admin-form"><h3>Add New Syrup</h3>
+            c.innerHTML =
+                `<div class="admin-form"><h3>Add New Syrup</h3>
     <div class="form-group"><label>Syrup Name</label><input id="as-name" placeholder="e.g. Vanilla Bean"></div>
     <div class="form-error" id="as-err"></div>
     <button class="btn-primary" onclick="addSyrup()">Add Syrup</button></div>
@@ -2626,18 +3628,37 @@
     <div class="orders-grid">${syrups.map((s, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
     <strong>${s}</strong><button class="btn-danger btn-sm" onclick="deleteSyrup(${idx})">Delete</button></div>`).join('')}</div>`;
         }
+
         function addSyrup() {
-            clearErrs(); const name = $('as-name').value.trim();
-            if (!name) { showErr('as-err', 'Syrup name is required'); return }
+            clearErrs();
+            const name = $('as-name').value.trim();
+            if (!name) {
+                showErr('as-err', 'Syrup name is required');
+                return
+            }
             const syrups = getSyrups();
-            if (syrups.includes(name)) { showErr('as-err', 'Syrup already exists'); return }
-            syrups.push(name); saveSyrups(syrups); toast(name + ' added', 'success'); renderAdminTab();
+            if (syrups.includes(name)) {
+                showErr('as-err', 'Syrup already exists');
+                return
+            }
+            syrups.push(name);
+            saveSyrups(syrups);
+            toast(name + ' added', 'success');
+            renderAdminTab();
         }
-        function deleteSyrup(idx) { const syrups = getSyrups(); syrups.splice(idx, 1); saveSyrups(syrups); toast('Syrup removed', 'info'); renderAdminTab() }
+
+        function deleteSyrup(idx) {
+            const syrups = getSyrups();
+            syrups.splice(idx, 1);
+            saveSyrups(syrups);
+            toast('Syrup removed', 'info');
+            renderAdminTab()
+        }
 
         function renderAdminBubbles(c) {
             const bubbles = getBubbles();
-            c.innerHTML = `<div class="admin-form"><h3>Add New Bubble Type</h3>
+            c.innerHTML =
+                `<div class="admin-form"><h3>Add New Bubble Type</h3>
     <div class="form-row">
     <div class="form-group"><label>Emoji</label><input id="ab-emoji" placeholder="e.g. ⚫" maxlength="4"></div>
     <div class="form-group"><label>Bubble Name</label><input id="ab-name" placeholder="e.g. Tapioca"></div>
@@ -2648,14 +3669,36 @@
     <div class="orders-grid">${bubbles.map((t, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
     <span><span style="font-size:1.5rem;margin-right:8px">${t.emoji}</span><strong>${t.name}</strong></span><button class="btn-danger btn-sm" onclick="deleteBubble(${idx})">Delete</button></div>`).join('')}</div>`;
         }
+
         function addBubble() {
-            clearErrs(); const name = $('ab-name').value.trim(), emoji = $('ab-emoji').value.trim() || '⚫';
-            if (!name) { showErr('ab-err', 'Bubble name is required'); return }
+            clearErrs();
+            const name = $('ab-name').value.trim(),
+                emoji = $('ab-emoji').value.trim() || '⚫';
+            if (!name) {
+                showErr('ab-err', 'Bubble name is required');
+                return
+            }
             const bubbles = getBubbles();
-            if (bubbles.find(t => t.name.toLowerCase() === name.toLowerCase())) { showErr('ab-err', 'Bubble already exists'); return }
-            bubbles.push({ emoji, name }); saveBubbles(bubbles); toast(name + ' added', 'success'); renderAdminTab();
+            if (bubbles.find(t => t.name.toLowerCase() === name.toLowerCase())) {
+                showErr('ab-err', 'Bubble already exists');
+                return
+            }
+            bubbles.push({
+                emoji,
+                name
+            });
+            saveBubbles(bubbles);
+            toast(name + ' added', 'success');
+            renderAdminTab();
         }
-        function deleteBubble(idx) { const bubbles = getBubbles(); bubbles.splice(idx, 1); saveBubbles(bubbles); toast('Bubble removed', 'info'); renderAdminTab() }
+
+        function deleteBubble(idx) {
+            const bubbles = getBubbles();
+            bubbles.splice(idx, 1);
+            saveBubbles(bubbles);
+            toast('Bubble removed', 'info');
+            renderAdminTab()
+        }
 
         function renderAdminAccounts(c) {
             if (currentUser.role !== 'superadmin') return;
@@ -2673,6 +3716,7 @@
     <td>${u.email === currentUser.email ? '<span style="color:var(--taupe);font-size:.8rem">You</span>' : `<button class="btn-danger btn-sm" onclick="deleteAccount('${u.email}')">Delete</button>`}</td></tr>`).join('')}
     </tbody></table></div>`;
         }
+
         function changeAccountRole(email, newRole) {
             if (currentUser.role !== 'superadmin') return;
             let users = getUsers();
@@ -2682,11 +3726,73 @@
             saveUsers(users);
             toast('Role updated', 'success');
         }
+
         function deleteAccount(email) {
             if (currentUser.role !== 'superadmin') return;
-            if (email === currentUser.email) return; let users = getUsers().filter(u => u.email !== email); saveUsers(users);
-            let orders = getOrders().filter(o => o.customerEmail !== email); saveOrders(orders);
-            toast('Account deleted', 'info'); renderAdminTab()
+            if (email === currentUser.email) return;
+            let users = getUsers().filter(u => u.email !== email);
+            saveUsers(users);
+            let orders = getOrders().filter(o => o.customerEmail !== email);
+            saveOrders(orders);
+            toast('Account deleted', 'info');
+            renderAdminTab()
+        }
+
+
+        function renderAdminTeam(c) {
+            const team = getTeam();
+            const canManageLeaders = currentUser.role === 'superadmin';
+            const leaders = team.filter(m => m.isLeader).sort((a, b) => a.order - b.order);
+            const others = team.filter(m => !m.isLeader).sort((a, b) => a.order - b.order);
+
+            let html = `<div style="margin-bottom:24px;display:flex;gap:12px;flex-wrap:wrap">
+                <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openEditTeamMember('')">+ Add Team Member</button>
+            </div>`;
+
+            html +=
+                `<h3 style="margin-bottom:12px;font-size:1.1rem">Leader Cards (Boris & Elina — Superadmin only)</h3>`;
+            if (leaders.length) {
+                html += `<div class="orders-grid" style="margin-bottom:32px">${leaders.map(m => {
+                    const photo = m.photo ? `<img src="${m.photo}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid rgba(217,123,168,0.2)">` : `<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark)">${getInitials(m.name)}</div>`;
+                    return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
+                        ${photo}
+                        <div style="flex:1">
+                            <strong>${m.name}</strong><br>
+                            <span style="color:var(--amber);font-size:.85rem">${m.title}</span><br>
+                            <span style="color:var(--taupe);font-size:.8rem">${(m.description||'').substring(0,80)}${(m.description||'').length>80?'...':''}</span>
+                        </div>
+                        ${canManageLeaders ? `<div style="display:flex;flex-direction:column;gap:6px">
+                            <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
+                            <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">Delete</button>
+                        </div>` : '<span style="color:var(--taupe);font-size:.75rem">Superadmin only</span>'}
+                    </div>`;
+                }).join('')}</div>`;
+            } else {
+                html += '<p style="color:var(--taupe);margin-bottom:24px">No leader cards yet.</p>';
+            }
+
+            html += `<h3 style="margin-bottom:12px;font-size:1.1rem">Team Members</h3>`;
+            if (others.length) {
+                html += `<div class="orders-grid">${others.map(m => {
+                    const photo = m.photo ? `<img src="${m.photo}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid rgba(217,123,168,0.2)">` : `<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--taupe),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">${getInitials(m.name)}</div>`;
+                    return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
+                        ${photo}
+                        <div style="flex:1">
+                            <strong>${m.name}</strong><br>
+                            <span style="color:var(--amber);font-size:.85rem">${m.title}</span><br>
+                            <span style="color:var(--taupe);font-size:.8rem">${(m.description||'').substring(0,80)}${(m.description||'').length>80?'...':''}</span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                            <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
+                            <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">Delete</button>
+                        </div>
+                    </div>`;
+                }).join('')}</div>`;
+            } else {
+                html += '<p style="color:var(--taupe)">No other team members yet. Click "Add Team Member" above.</p>';
+            }
+
+            c.innerHTML = html;
         }
 
         // ── INIT ──
@@ -2719,30 +3825,39 @@
                 return _ref.bubbles.once('value');
             }).then(snap => {
                 _dbBubbles = _fbArr(snap);
+                return _ref.team.once('value');
+            }).then(snap => {
+                _dbTeam = _fbArr(snap);
 
                 // Init data if first run
                 initSuperadmin();
+                initTeam();
                 if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
                 if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
                 if (!_dbBubbles.length) saveBubbles([...DEFAULT_BUBBLES]);
 
                 _firebaseReady = true;
+                renderLandingTeam();
 
                 // Restore session
                 const session = ls('bolik_session');
                 if (session) {
                     const u = _dbUsers.find(x => x && x.email && x.email === session.email);
-                    if (u) { loginAs(u); return; }
+                    if (u) {
+                        loginAs(u);
+                        return;
+                    }
                 }
                 // Leave landing page visible if no session
             }).catch(err => {
                 console.error('Firebase init error:', err);
                 $('landing-page').style.display = 'none';
                 $('auth-page').style.display = 'flex';
-                $('auth-page').querySelector('.auth-header').innerHTML = '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed: ' + err.message + '</p>';
+                $('auth-page').querySelector('.auth-header').innerHTML =
+                    '<div class="brand-emoji">🧋</div><h1>B<span>o</span>lik</h1><p style="color:#e74c3c">Connection failed: ' +
+                    err.message + '</p>';
             });
         });
-
     </script>
 </body>
 
