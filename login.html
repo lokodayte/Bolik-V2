@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolik — Sign In</title>
+    <meta name="description"
+        content="Sign in or create an account to order handcrafted bubble tea for campus delivery at UWC Dilijan.">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+
+<body>
+    <div id="toast-container"></div>
+
+    <!-- ── LANDING PAGE ── -->
+    <div id="landing-page">
+        <div class="lp-content">
+            <!-- Hero -->
+            <div class="lp-hero-wrap">
+                <div class="lp-bubble"></div>
+                <div class="lp-bubble"></div>
+                <div class="lp-bubble"></div>
+                <div class="lp-bubble"></div>
+                <header class="lp-header">
+                    <img src="Bolik1.png" alt="logo" class="lp-logo">
+                    <button class="btn-enter" onclick="goToAuth()">Login / Sign Up</button>
+                </header>
+                <main class="lp-hero">
+                    <h1 style="color: #F0A75C;"><span style="color: #c33cc170;">Bolik</span> — Your Happiness, Twice a Week</h1>
+                    <p>Premium handcrafted bubble tea, delivered to your door at UWC Dilijan. We blend tradition with
+                        modern taste</p>
+                </main>
+                <div class="lp-scroll-hint">
+                    <span>Discover more</span><span class="arrow">↓</span>
+                </div>
+            </div>
+
+            <!-- About UWC -->
+            <section class="lp-about">
+                <h2 class="lp-section-title">About <span>UWC Dilijan</span></h2>
+                <p class="lp-section-sub">Where education meets purpose</p>
+                <div class="about-grid">
+                    <div class="about-card">
+                        <div class="about-icon">🌍</div>
+                        <h3>United World Colleges</h3>
+                        <p>UWC is a global education movement of 18 schools across four continents, uniting young people
+                            from over 155 countries. Founded on the belief that education can bridge cultural divides,
+                            UWC empowers students to become agents of change through shared living, experiential
+                            learning, and service.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-icon">🏔️</div>
+                        <h3>UWC Dilijan, Armenia</h3>
+                        <p>Nestled in the lush forests of Dilijan National Park, UWC Dilijan opened in 2014 as the 14th
+                            UWC. Nearly 200 students from 80+ countries live, learn, and create together here. The
+                            campus blends world-class architecture with nature, fostering a vibrant community of
+                            thinkers, leaders, and changemakers.</p>
+                    </div>
+                </div>
+                <div class="about-card about-bolik">
+                    <div class="about-icon">🧋</div>
+                    <h3>What is Bolik?</h3>
+                    <p>Bolik is a student-founded CAS (Creativity, Activity, Service) initiative at UWC Dilijan. Born
+                        from a love for bubble tea and community, Bolik crafts premium drinks with hand-selected
+                        ingredients and delivers them across campus. Every cup supports student entrepreneurship and the
+                        spirit of service that defines UWC life.</p>
+                </div>
+            </section>
+
+            <!-- Leaders Section (Boris & Elina) -->
+            <section class="lp-leaders-section">
+                <h2 class="lp-section-title">Our <span>Leaders</span></h2>
+                <p class="lp-section-sub">The visionaries behind Bolik</p>
+                <div class="leaders-grid" id="lp-leaders-grid"></div>
+            </section>
+
+            <!-- Team Section -->
+            <section class="lp-team-section">
+                <h2 class="lp-section-title">Our <span>Team</span></h2>
+                <p class="lp-section-sub">The amazing people who make it happen</p>
+                <div class="team-grid-new" id="lp-team-grid"></div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="lp-footer">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <img src="Bolik1.png" alt="Bolik" class="footer-logo">
+                        <p>Handcrafted with love at UWC Dilijan</p>
+                    </div>
+                    <div class="footer-links">
+                        <p>&copy; 2026 Bolik — A UWC Dilijan CAS Project</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ── AUTH LAYER ── -->
+    <div id="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>B<span>o</span>lik</h1>
+                <p>Handcrafted with love at UWC Dilijan</p>
+            </div>
+            <div class="auth-toggle">
+                <button id="tab-login" class="active" onclick="showAuthTab('login')">Sign In</button>
+                <button id="tab-register" onclick="showAuthTab('register')">Register</button>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group"><label>Email</label><input type="email" id="login-email"
+                        placeholder="you@uwcdilijan.am" required>
+                    <div class="form-error" id="login-email-err"></div>
+                </div>
+                <div class="form-group"><label>Password</label><input type="password" id="login-pass"
+                        placeholder="Enter your password" required>
+                    <div class="form-error" id="login-pass-err"></div>
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+            <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+                <div class="form-group"><label>Full Name</label><input type="text" id="reg-name"
+                        placeholder="Your full name" required>
+                    <div class="form-error" id="reg-name-err"></div>
+                </div>
+                <div class="form-group"><label>Email</label><input type="email" id="reg-email"
+                        placeholder="you@student.uwcdilijan.am" required>
+                    <div class="form-error" id="reg-email-err"></div>
+                </div>
+                <div class="form-group"><label>Password</label><input type="password" id="reg-pass"
+                        placeholder="Create a password" required minlength="4">
+                    <div class="form-error" id="reg-pass-err"></div>
+                </div>
+                <div class="form-group"><label>Confirm Password</label><input type="password" id="reg-pass2"
+                        placeholder="Confirm your password" required>
+                    <div class="form-error" id="reg-pass2-err"></div>
+                </div>
+                <div class="form-group"><label>I am a...</label>
+                    <div class="role-select">
+                        <div class="role-opt active" onclick="selectRole(this,'customer')">🧋 Customer</div>
+                        <div class="role-opt" onclick="selectRole(this,'employee')">👨‍🍳 Staff</div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+            <div id="otp-step" class="hidden">
+                <div class="form-group">
+                    <label>Verification Code</label>
+                    <p style="color:var(--taupe);font-size:.85rem;margin-bottom:8px">
+                        We sent a 6-digit code to <strong id="otp-email-display"></strong>
+                    </p>
+                    <input type="text" id="otp-code" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                        placeholder="Enter 6-digit code">
+                    <div class="form-error" id="otp-code-err"></div>
+                </div>
+                <button type="button" class="btn-primary" onclick="verifyOtpAndRegister()">Verify & Create
+                    Account</button>
+                <button type="button" class="btn-outline" style="width:100%;margin-top:8px" id="otp-resend-btn"
+                    onclick="resendOtp()">Resend Code</button>
+                <button type="button" class="btn-outline" style="width:100%;margin-top:8px"
+                    onclick="cancelOtp()">← Back</button>
+            </div>
+            <button id="auth-back-btn" onclick="goToLanding()" class="btn-outline" style="margin-top:12px; width:100%">
+                ← Back to Landing Page
+            </button>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="auth.js"></script>
+</body>
+
+</html>

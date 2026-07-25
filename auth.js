@@ -1,0 +1,256 @@
+// Bolik — landing page + login/register/OTP flow. Runs on login.html only.
+// Depends on shared.js being loaded first.
+
+        // ── STATE (this page only) ──
+        let selectedRole = 'customer';
+        let pendingRegistration = null;
+        let pendingOtp = null;
+        let otpResendTimer = null;
+
+        function showAuthTab(tab) {
+            pendingRegistration = null;
+            pendingOtp = null;
+            clearInterval(otpResendTimer);
+            $('otp-step').classList.add('hidden');
+            $('login-form').classList.toggle('hidden', tab !== 'login');
+            $('register-form').classList.toggle('hidden', tab !== 'register');
+            $('tab-login').classList.toggle('active', tab === 'login');
+            $('tab-register').classList.toggle('active', tab === 'register');
+            document.querySelectorAll('.form-error').forEach(e => {
+                e.classList.remove('show');
+                e.textContent = ''
+            })
+        }
+
+        function selectRole(el, role) {
+            selectedRole = role;
+            document.querySelectorAll('.role-opt').forEach(e => e.classList.remove('active'));
+            el.classList.add('active')
+        }
+
+        function handleLogin(ev) {
+            ev.preventDefault();
+            clearErrs();
+            const email = $('login-email').value.trim().toLowerCase(),
+                pass = $('login-pass').value;
+            if (!validEmail(email)) {
+                showErr('login-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');
+                return
+            }
+            // Fetch fresh data from Firebase to avoid cache issues
+            _ref.users.once('value').then(function (snap) {
+                _dbUsers = _fbArr(snap);
+                const user = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email && u
+                    .password === pass);
+                if (!user) {
+                    const exists = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email);
+                    if (exists) showErr('login-pass-err', 'Invalid password. Account exists.');
+                    else showErr('login-pass-err', 'Account not found. Please register or check email.');
+                    return;
+                }
+                loginAs(user);
+            }).catch(function (error) {
+                showErr('login-pass-err', 'Database Error: ' + error.message);
+                toast('Login failed: ' + error.message, 'error');
+            });
+        }
+
+        function handleRegister(ev) {
+            ev.preventDefault();
+            clearErrs();
+            const name = $('reg-name').value.trim(),
+                email = $('reg-email').value.trim().toLowerCase(),
+                pass = $('reg-pass').value,
+                pass2 = $('reg-pass2').value;
+            if (!name) {
+                showErr('reg-name-err', 'Name is required');
+                return
+            }
+            if (!validEmail(email)) {
+                showErr('reg-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');
+                return
+            }
+            if (pass.length < 4) {
+                showErr('reg-pass-err', 'Password must be at least 4 characters');
+                return
+            }
+            if (pass !== pass2) {
+                showErr('reg-pass2-err', 'Passwords do not match');
+                return
+            }
+            let users = getUsers();
+            if (users.find(u => u.email === email)) {
+                showErr('reg-email-err', 'An account with this email already exists');
+                return
+            }
+            const role = email === SUPERADMIN_EMAIL ? 'superadmin' : selectedRole;
+            pendingRegistration = { name, email, pass, role };
+            sendRegistrationOtp();
+        }
+
+        // ── REGISTRATION OTP (email verification, discourages mass account creation) ──
+        const OTP_RESEND_COOLDOWN = 60; // seconds between resends
+        const OTP_MAX_SENDS_PER_DAY = 5; // per email, guards against OTP spam/email-bombing
+
+        function otpSendsAllowed(email) {
+            const log = ls('bolik_otp_log') || {};
+            const now = Date.now();
+            const recent = (log[email] || []).filter(t => now - t < 24 * 60 * 60 * 1000);
+            log[email] = recent;
+            ls('bolik_otp_log', log);
+            return recent.length < OTP_MAX_SENDS_PER_DAY;
+        }
+
+        function recordOtpSend(email) {
+            const log = ls('bolik_otp_log') || {};
+            log[email] = [...(log[email] || []), Date.now()];
+            ls('bolik_otp_log', log);
+        }
+
+        function sendRegistrationOtp() {
+            const email = pendingRegistration.email;
+            if (!otpSendsAllowed(email)) {
+                showErr('reg-email-err', 'Too many codes requested for this email today. Please try again tomorrow.');
+                pendingRegistration = null;
+                return;
+            }
+            const code = String(Math.floor(100000 + Math.random() * 900000));
+            pendingOtp = { code, expires: Date.now() + 10 * 60 * 1000 };
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                to_email: email,
+                VERIFICATION_CODE: code
+            }).then(() => {
+                recordOtpSend(email);
+                clearErrs();
+                $('register-form').classList.add('hidden');
+                $('otp-step').classList.remove('hidden');
+                $('otp-email-display').textContent = email;
+                $('otp-code').value = '';
+                toast('Verification code sent to ' + email, 'success');
+                startOtpResendCooldown();
+            }).catch(err => {
+                pendingOtp = null;
+                toast('Could not send verification code: ' + (err.text || err.message || 'unknown error'), 'error');
+            });
+        }
+
+        function startOtpResendCooldown() {
+            const btn = $('otp-resend-btn');
+            if (!btn) return;
+            let remaining = OTP_RESEND_COOLDOWN;
+            btn.disabled = true;
+            btn.textContent = `Resend Code (${remaining}s)`;
+            clearInterval(otpResendTimer);
+            otpResendTimer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(otpResendTimer);
+                    btn.disabled = false;
+                    btn.textContent = 'Resend Code';
+                } else {
+                    btn.textContent = `Resend Code (${remaining}s)`;
+                }
+            }, 1000);
+        }
+
+        function resendOtp() {
+            if (!pendingRegistration || $('otp-resend-btn').disabled) return;
+            sendRegistrationOtp();
+        }
+
+        function cancelOtp() {
+            pendingRegistration = null;
+            pendingOtp = null;
+            clearInterval(otpResendTimer);
+            $('otp-step').classList.add('hidden');
+            $('register-form').classList.remove('hidden');
+            clearErrs();
+        }
+
+        function verifyOtpAndRegister() {
+            const entered = $('otp-code').value.trim();
+            if (!pendingOtp || !pendingRegistration) {
+                showErr('otp-code-err', 'Session expired, please start over.');
+                return;
+            }
+            if (Date.now() > pendingOtp.expires) {
+                showErr('otp-code-err', 'Code expired. Tap Resend to get a new one.');
+                return;
+            }
+            if (entered !== pendingOtp.code) {
+                showErr('otp-code-err', 'Incorrect code. Please try again.');
+                return;
+            }
+            const reg = pendingRegistration;
+            pendingRegistration = null;
+            pendingOtp = null;
+            clearInterval(otpResendTimer);
+            finishRegistration(reg);
+        }
+
+
+        function loginAs(user) {
+            ls('bolik_session', user);
+            window.location.href = 'index.html';
+        }
+
+        function finishRegistration({ name, email, pass, role }) {
+            let users = getUsers();
+            if (users.find(u => u.email === email)) {
+                $('otp-step').classList.add('hidden');
+                $('register-form').classList.remove('hidden');
+                showErr('reg-email-err', 'An account with this email already exists');
+                return;
+            }
+            users.push({ email, password: pass, name, role });
+            saveUsers(users).then(() => {
+                loginAs({ email, name, role });
+            }).catch(() => {
+                showErr('otp-code-err', 'Could not create your account, please try again.');
+            });
+        }
+
+        function goToAuth() {
+            $('landing-page').style.display = 'none';
+            $('auth-page').style.display = 'flex';
+        }
+
+        function goToLanding() {
+            $('auth-page').style.display = 'none';
+            $('landing-page').style.display = 'flex';
+        }
+
+        // ── INIT ──
+        document.addEventListener('DOMContentLoaded', () => {
+            // Already signed in? Skip the landing page entirely.
+            const existingSession = ls('bolik_session');
+            if (existingSession) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            $('auth-page').style.display = 'none';
+            $('landing-page').style.display = 'flex';
+
+            // Keep the public team grid live if it changes while someone's browsing.
+            _ref.team.on('value', function (snap) {
+                _dbTeam = _fbArr(snap);
+                if (_firebaseReady) renderLandingTeam();
+            }, err => console.warn('Team listener:', err.message));
+
+            _ref.users.once('value').then(snap => {
+                _dbUsers = _fbArr(snap);
+                return _ref.team.once('value');
+            }).then(snap => {
+                _dbTeam = _fbArr(snap);
+
+                initSuperadmin();
+                initTeam();
+
+                _firebaseReady = true;
+                renderLandingTeam();
+            }).catch(err => {
+                console.error('Firebase init error:', err);
+                toast('Connection failed: ' + err.message, 'error');
+            });
+        });
