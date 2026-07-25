@@ -2060,6 +2060,7 @@
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 
 <body>
@@ -2196,7 +2197,24 @@
                 </div>
                 <button type="submit" class="btn-primary">Create Account</button>
             </form>
-            <button onclick="goToLanding()" class="btn-outline" style="margin-top:12px; width:100%">
+            <div id="otp-step" class="hidden">
+                <div class="form-group">
+                    <label>Verification Code</label>
+                    <p style="color:var(--taupe);font-size:.85rem;margin-bottom:8px">
+                        We sent a 6-digit code to <strong id="otp-email-display"></strong>
+                    </p>
+                    <input type="text" id="otp-code" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                        placeholder="Enter 6-digit code">
+                    <div class="form-error" id="otp-code-err"></div>
+                </div>
+                <button type="button" class="btn-primary" onclick="verifyOtpAndRegister()">Verify & Create
+                    Account</button>
+                <button type="button" class="btn-outline" style="width:100%;margin-top:8px" id="otp-resend-btn"
+                    onclick="resendOtp()">Resend Code</button>
+                <button type="button" class="btn-outline" style="width:100%;margin-top:8px"
+                    onclick="cancelOtp()">← Back</button>
+            </div>
+            <button id="auth-back-btn" onclick="goToLanding()" class="btn-outline" style="margin-top:12px; width:100%">
                 ← Back to Landing Page
             </button>
         </div>
@@ -2323,6 +2341,13 @@
         };
         firebase.initializeApp(firebaseConfig);
         const _fb = firebase.database();
+
+        // ── EMAILJS (registration OTP) ──
+        const EMAILJS_SERVICE_ID = 'Bolik';
+        const EMAILJS_TEMPLATE_ID = 'template_xj6bigj';
+        const EMAILJS_PUBLIC_KEY = '4Rhjzk_gR3p1Vst5g';
+        emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
         const _ref = {
             users: _fb.ref('bolik_users'),
             orders: _fb.ref('bolik_orders'),
@@ -2343,6 +2368,9 @@
         let _dbSyrups = [];
         let _dbBubbles = [];
         let _dbTeam = [];
+        let pendingRegistration = null;
+        let pendingOtp = null;
+        let otpResendTimer = null;
         let _firebaseReady = false;
 
         // ── HELPERS ──
@@ -2752,6 +2780,10 @@
 
         // ── AUTH ──
         function showAuthTab(tab) {
+            pendingRegistration = null;
+            pendingOtp = null;
+            clearInterval(otpResendTimer);
+            $('otp-step').classList.add('hidden');
             $('login-form').classList.toggle('hidden', tab !== 'login');
             $('register-form').classList.toggle('hidden', tab !== 'register');
             $('tab-login').classList.toggle('active', tab === 'login');
@@ -2837,18 +2869,122 @@
                 return
             }
             const role = email === SUPERADMIN_EMAIL ? 'superadmin' : selectedRole;
-            users.push({
-                email,
-                password: pass,
-                name,
-                role
+            pendingRegistration = { name, email, pass, role };
+            sendRegistrationOtp();
+        }
+
+        // ── REGISTRATION OTP (email verification, discourages mass account creation) ──
+        const OTP_RESEND_COOLDOWN = 60; // seconds between resends
+        const OTP_MAX_SENDS_PER_DAY = 5; // per email, guards against OTP spam/email-bombing
+
+        function otpSendsAllowed(email) {
+            const log = ls('bolik_otp_log') || {};
+            const now = Date.now();
+            const recent = (log[email] || []).filter(t => now - t < 24 * 60 * 60 * 1000);
+            log[email] = recent;
+            ls('bolik_otp_log', log);
+            return recent.length < OTP_MAX_SENDS_PER_DAY;
+        }
+
+        function recordOtpSend(email) {
+            const log = ls('bolik_otp_log') || {};
+            log[email] = [...(log[email] || []), Date.now()];
+            ls('bolik_otp_log', log);
+        }
+
+        function sendRegistrationOtp() {
+            const email = pendingRegistration.email;
+            if (!otpSendsAllowed(email)) {
+                showErr('reg-email-err', 'Too many codes requested for this email today. Please try again tomorrow.');
+                pendingRegistration = null;
+                return;
+            }
+            const code = String(Math.floor(100000 + Math.random() * 900000));
+            pendingOtp = { code, expires: Date.now() + 10 * 60 * 1000 };
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                to_email: email,
+                otp_code: code
+            }).then(() => {
+                recordOtpSend(email);
+                clearErrs();
+                $('register-form').classList.add('hidden');
+                $('otp-step').classList.remove('hidden');
+                $('otp-email-display').textContent = email;
+                $('otp-code').value = '';
+                toast('Verification code sent to ' + email, 'success');
+                startOtpResendCooldown();
+            }).catch(err => {
+                pendingOtp = null;
+                toast('Could not send verification code: ' + (err.text || err.message || 'unknown error'), 'error');
             });
+        }
+
+        function startOtpResendCooldown() {
+            const btn = $('otp-resend-btn');
+            if (!btn) return;
+            let remaining = OTP_RESEND_COOLDOWN;
+            btn.disabled = true;
+            btn.textContent = `Resend Code (${remaining}s)`;
+            clearInterval(otpResendTimer);
+            otpResendTimer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(otpResendTimer);
+                    btn.disabled = false;
+                    btn.textContent = 'Resend Code';
+                } else {
+                    btn.textContent = `Resend Code (${remaining}s)`;
+                }
+            }, 1000);
+        }
+
+        function resendOtp() {
+            if (!pendingRegistration || $('otp-resend-btn').disabled) return;
+            sendRegistrationOtp();
+        }
+
+        function cancelOtp() {
+            pendingRegistration = null;
+            pendingOtp = null;
+            clearInterval(otpResendTimer);
+            $('otp-step').classList.add('hidden');
+            $('register-form').classList.remove('hidden');
+            clearErrs();
+        }
+
+        function verifyOtpAndRegister() {
+            const entered = $('otp-code').value.trim();
+            if (!pendingOtp || !pendingRegistration) {
+                showErr('otp-code-err', 'Session expired, please start over.');
+                return;
+            }
+            if (Date.now() > pendingOtp.expires) {
+                showErr('otp-code-err', 'Code expired. Tap Resend to get a new one.');
+                return;
+            }
+            if (entered !== pendingOtp.code) {
+                showErr('otp-code-err', 'Incorrect code. Please try again.');
+                return;
+            }
+            const reg = pendingRegistration;
+            pendingRegistration = null;
+            pendingOtp = null;
+            clearInterval(otpResendTimer);
+            finishRegistration(reg);
+        }
+
+        function finishRegistration({ name, email, pass, role }) {
+            let users = getUsers();
+            if (users.find(u => u.email === email)) {
+                $('otp-step').classList.add('hidden');
+                $('register-form').classList.remove('hidden');
+                showErr('reg-email-err', 'An account with this email already exists');
+                return;
+            }
+            users.push({ email, password: pass, name, role });
             saveUsers(users);
-            loginAs({
-                email,
-                name,
-                role
-            });
+            $('otp-step').classList.add('hidden');
+            loginAs({ email, name, role });
             toast('Welcome to Bolik, ' + name.split(' ')[0] + '!', 'success');
         }
 
