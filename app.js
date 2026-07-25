@@ -11,8 +11,49 @@
         const DELIVERY_FEE = 200;
 
         function logout() {
-            ls('bolik_session', null);
-            window.location.href = 'login.html';
+            _auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+
+        function openChangePassword() {
+            const ov = $('modal-overlay');
+            ov.classList.remove('hidden');
+            ov.innerHTML = `<div class="modal">
+                <button class="modal-close" onclick="$('modal-overlay').classList.add('hidden')">✕</button>
+                <h2>Change Password</h2>
+                <p class="modal-sub">Update your account password</p>
+                <div class="form-group"><label>Current Password</label><input type="password" id="cp-current"></div>
+                <div class="form-group"><label>New Password</label><input type="password" id="cp-new" minlength="4"></div>
+                <div class="form-group"><label>Confirm New Password</label><input type="password" id="cp-confirm"></div>
+                <div class="form-error" id="cp-err"></div>
+                <button class="btn-primary" onclick="submitChangePassword()">Update Password</button>
+            </div>`;
+        }
+
+        function submitChangePassword() {
+            const current = $('cp-current').value;
+            const next = $('cp-new').value;
+            const confirmPass = $('cp-confirm').value;
+            if (next.length < 4) {
+                showErr('cp-err', 'New password must be at least 4 characters');
+                return;
+            }
+            if (next !== confirmPass) {
+                showErr('cp-err', 'New passwords do not match');
+                return;
+            }
+            const user = _auth.currentUser;
+            const cred = firebase.auth.EmailAuthProvider.credential(user.email, current);
+            user.reauthenticateWithCredential(cred).then(() => {
+                return user.updatePassword(next);
+            }).then(() => {
+                $('modal-overlay').classList.add('hidden');
+                toast('Password updated', 'success');
+            }).catch(err => {
+                showErr('cp-err', err.code === 'auth/wrong-password' ?
+                    'Current password is incorrect' : 'Could not update password: ' + err.message);
+            });
         }
 
         // ── NAV ──
@@ -1015,40 +1056,69 @@
 
         function renderAdminAccounts(c) {
             if (currentUser.role !== 'superadmin') return;
-            const users = getUsers();
+            const users = getUsers().filter(u => u && u.uid);
             c.innerHTML = `<h3 style="margin-bottom:16px">Registered Accounts (${users.length})</h3>
     <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>
     ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>
-    <select class="role-changer" onchange="changeAccountRole('${u.email}', this.value)" ${u.email === currentUser.email || u.role === 'superadmin' ? 'disabled' : ''} style="padding:4px;border-radius:4px;background:var(--surface);color:var(--text);border:1px solid var(--border)">
+    <select class="role-changer" onchange="changeAccountRole('${u.uid}', this.value)" ${u.uid === currentUser.uid || u.role === 'superadmin' ? 'disabled' : ''} style="padding:4px;border-radius:4px;background:var(--surface);color:var(--text);border:1px solid var(--border)">
         <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>Customer</option>
         <option value="employee" ${u.role === 'employee' ? 'selected' : ''}>Staff</option>
         <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
         ${u.role === 'superadmin' ? '<option value="superadmin" selected>Superadmin</option>' : ''}
     </select>
     </td>
-    <td>${u.email === currentUser.email ? '<span style="color:var(--taupe);font-size:.8rem">You</span>' : `<button class="btn-danger btn-sm" onclick="deleteAccount('${u.email}')">Delete</button>`}</td></tr>`).join('')}
-    </tbody></table></div>`;
+    <td>${u.uid === currentUser.uid ? '<span style="color:var(--taupe);font-size:.8rem">You</span>' : `<button class="btn-danger btn-sm" onclick="deleteAccount('${u.uid}','${u.email}')">Delete</button>`}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div id="legacy-accounts-section"></div>`;
+            renderLegacyAccounts();
         }
 
-        function changeAccountRole(email, newRole) {
-            if (currentUser.role !== 'superadmin') return;
-            let users = getUsers();
-            let u = users.find(x => x.email === email);
-            if (!u || u.role === 'superadmin') return;
-            u.role = newRole;
-            saveUsers(users);
-            toast('Role updated', 'success');
+        // Accounts still sitting in the old plaintext format (pre-upgrade,
+        // haven't logged in yet to auto-migrate). Superadmin can clear these
+        // out manually once confident everyone active has moved over.
+        function renderLegacyAccounts() {
+            _ref.users.once('value').then(snap => {
+                const val = snap.val() || {};
+                const legacyEntries = Object.entries(val).filter(([k, v]) => v && v.password !== undefined);
+                const el = $('legacy-accounts-section');
+                if (!el) return;
+                if (!legacyEntries.length) {
+                    el.innerHTML = '';
+                    return;
+                }
+                el.innerHTML = `<h3 style="margin:24px 0 12px">Not Yet Migrated (${legacyEntries.length})</h3>
+        <p style="color:var(--taupe);font-size:.85rem;margin-bottom:12px">These accounts registered before the security upgrade and will migrate automatically the next time they log in. You can remove old records manually below.</p>
+        <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>
+        ${legacyEntries.map(([key, v]) => `<tr><td>${v.name || ''}</td><td>${v.email || ''}</td><td>${v.role || ''}</td><td><button class="btn-danger btn-sm" onclick="removeLegacyAccount('${key}')">Remove old record</button></td></tr>`).join('')}
+        </tbody></table></div>`;
+            }).catch(() => {});
         }
 
-        function deleteAccount(email) {
+        function removeLegacyAccount(key) {
             if (currentUser.role !== 'superadmin') return;
-            if (email === currentUser.email) return;
-            let users = getUsers().filter(u => u.email !== email);
-            saveUsers(users);
-            let orders = getOrders().filter(o => o.customerEmail !== email);
-            saveOrders(orders);
-            toast('Account deleted', 'info');
-            renderAdminTab()
+            if (!confirm('Remove this old-format record? The person will need to register again to get a new account.')) return;
+            _ref.users.child(key).remove().then(() => {
+                toast('Old record removed', 'info');
+                renderAdminTab();
+            }).catch(e => toast('Could not remove: ' + e.message, 'error'));
+        }
+
+        function changeAccountRole(uid, newRole) {
+            if (currentUser.role !== 'superadmin') return;
+            _ref.users.child(uid).update({ role: newRole }).then(() => {
+                toast('Role updated', 'success');
+            }).catch(e => toast('Could not update role: ' + e.message, 'error'));
+        }
+
+        function deleteAccount(uid, email) {
+            if (currentUser.role !== 'superadmin') return;
+            if (uid === currentUser.uid) return;
+            _ref.users.child(uid).remove().then(() => {
+                let orders = getOrders().filter(o => o.customerEmail !== email);
+                saveOrders(orders);
+                toast('Account access removed', 'info');
+                renderAdminTab();
+            }).catch(e => toast('Could not delete account: ' + e.message, 'error'));
         }
 
 
@@ -1113,12 +1183,16 @@
 
         // ── INIT ──
         document.addEventListener('DOMContentLoaded', () => {
-            const session = ls('bolik_session');
-            if (!session) {
-                window.location.href = 'login.html';
-                return;
-            }
+            _auth.onAuthStateChanged(authUser => {
+                if (!authUser) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                enterApp(authUser);
+            });
+        });
 
+        function enterApp(authUser) {
             setupFirebaseListeners();
 
             _ref.users.once('value').then(snap => {
@@ -1139,7 +1213,6 @@
             }).then(snap => {
                 _dbTeam = _fbArr(snap);
 
-                initSuperadmin();
                 initTeam();
                 if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
                 if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
@@ -1147,16 +1220,24 @@
 
                 _firebaseReady = true;
 
-                // Prefer the freshly-fetched record (keeps role current), but
-                // fall back to the session itself in case a just-completed
-                // registration's write hasn't finished propagating yet.
-                const u = _dbUsers.find(x => x && x.email && x.email === session.email) || session;
-                startApp(u);
+                const profile = _dbUsers.find(u => u && u.uid === authUser.uid);
+                if (profile) {
+                    startApp(profile);
+                    return;
+                }
+                // Profile write from a just-completed registration/migration
+                // may not have reached this fresh list read yet — go straight
+                // to its own path instead of failing.
+                return _ref.users.child(authUser.uid).once('value').then(s => {
+                    const p = s.val();
+                    if (!p) throw new Error('Your account profile could not be found. Please try logging in again.');
+                    startApp(p);
+                });
             }).catch(err => {
                 console.error('Firebase init error:', err);
                 toast('Connection failed: ' + err.message, 'error');
             });
-        });
+        }
 
         function startApp(user) {
             currentUser = user;

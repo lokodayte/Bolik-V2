@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "bolik_users": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')",
+        "role": {
+          ".validate": "root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin' || (!data.exists() && (newData.val() === 'customer' || newData.val() === 'employee' || (newData.val() === 'superadmin' && auth.token.email === 'b.sargsyan@student.uwcdilijan.am')))"
+        }
+      }
+    },
+    "bolik_orders": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "bolik_products": {
+      ".read": true,
+      ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
+    },
+    "bolik_syrups": {
+      ".read": true,
+      ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
+    },
+    "bolik_bubbles": {
+      ".read": true,
+      ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
+    },
+    "bolik_team": {
+      ".read": true,
+      ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
+    }
+  }
+}

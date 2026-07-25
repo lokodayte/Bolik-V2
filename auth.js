@@ -37,21 +37,48 @@
                 showErr('login-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');
                 return
             }
-            // Fetch fresh data from Firebase to avoid cache issues
-            _ref.users.once('value').then(function (snap) {
-                _dbUsers = _fbArr(snap);
-                const user = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email && u
-                    .password === pass);
-                if (!user) {
-                    const exists = _dbUsers.find(u => u && u.email && u.email.toLowerCase() === email);
-                    if (exists) showErr('login-pass-err', 'Invalid password. Account exists.');
-                    else showErr('login-pass-err', 'Account not found. Please register or check email.');
-                    return;
+            _auth.signInWithEmailAndPassword(email, pass).then(() => {
+                loginAs();
+            }).catch(err => {
+                const noSuchAuthAccount = ['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential']
+                    .includes(err.code);
+                if (noSuchAuthAccount) {
+                    // Not a Firebase Auth account yet — might be a pre-upgrade
+                    // account that only exists in the old plaintext list.
+                    attemptLegacyMigration(email, pass);
+                } else {
+                    showErr('login-pass-err', 'Login failed: ' + err.message);
+                    toast('Login failed: ' + err.message, 'error');
                 }
-                loginAs(user);
-            }).catch(function (error) {
-                showErr('login-pass-err', 'Database Error: ' + error.message);
-                toast('Login failed: ' + error.message, 'error');
+            });
+        }
+
+        // Accounts created before the security upgrade only exist as plaintext
+        // rows in bolik_users, not as real Firebase Auth accounts. If the
+        // password they just typed matches their old record, that's proof of
+        // identity enough to silently create a real Firebase Auth account for
+        // them with the same password and carry their role over — no separate
+        // "reset your password" step needed.
+        function attemptLegacyMigration(email, pass) {
+            const legacy = getUsers().find(u => u && u.email && u.email.toLowerCase() === email && u.password === pass);
+            if (!legacy) {
+                const exists = getUsers().find(u => u && u.email && u.email.toLowerCase() === email);
+                if (exists) showErr('login-pass-err', 'Invalid password. Account exists.');
+                else showErr('login-pass-err', 'Account not found. Please register or check email.');
+                return;
+            }
+            _auth.createUserWithEmailAndPassword(email, pass).then(cred => {
+                const role = (legacy.email === SUPERADMIN_EMAIL) ? 'superadmin' : legacy.role;
+                return saveUserProfile(cred.user.uid, {
+                    uid: cred.user.uid,
+                    email: legacy.email,
+                    name: legacy.name,
+                    role
+                });
+            }).then(() => {
+                loginAs();
+            }).catch(err => {
+                showErr('login-pass-err', 'Could not upgrade your account: ' + err.message);
             });
         }
 
@@ -189,8 +216,7 @@
         }
 
 
-        function loginAs(user) {
-            ls('bolik_session', user);
+        function loginAs() {
             window.location.href = 'index.html';
         }
 
@@ -202,11 +228,20 @@
                 showErr('reg-email-err', 'An account with this email already exists');
                 return;
             }
-            users.push({ email, password: pass, name, role });
-            saveUsers(users).then(() => {
-                loginAs({ email, name, role });
-            }).catch(() => {
-                showErr('otp-code-err', 'Could not create your account, please try again.');
+            _auth.createUserWithEmailAndPassword(email, pass).then(cred => {
+                return saveUserProfile(cred.user.uid, { uid: cred.user.uid, email, name, role });
+            }).then(() => {
+                loginAs();
+            }).catch(err => {
+                $('otp-step').classList.add('hidden');
+                $('register-form').classList.remove('hidden');
+                if (err.code === 'auth/email-already-in-use') {
+                    showErr('reg-email-err', 'An account with this email already exists');
+                } else if (err.code === 'auth/weak-password') {
+                    showErr('reg-pass-err', 'Password is too weak, please choose a stronger one');
+                } else {
+                    showErr('reg-email-err', 'Could not create your account: ' + err.message);
+                }
             });
         }
 
@@ -222,15 +257,17 @@
 
         // ── INIT ──
         document.addEventListener('DOMContentLoaded', () => {
-            // Already signed in? Skip the landing page entirely.
-            const existingSession = ls('bolik_session');
-            if (existingSession) {
-                window.location.href = 'index.html';
-                return;
-            }
-
             $('auth-page').style.display = 'none';
-            $('landing-page').style.display = 'flex';
+
+            // Already signed in (real Firebase Auth session, not a localStorage
+            // flag)? Skip the landing page entirely.
+            _auth.onAuthStateChanged(user => {
+                if (user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                $('landing-page').style.display = 'flex';
+            });
 
             // Keep the public team grid live if it changes while someone's browsing.
             _ref.team.on('value', function (snap) {
@@ -244,7 +281,6 @@
             }).then(snap => {
                 _dbTeam = _fbArr(snap);
 
-                initSuperadmin();
                 initTeam();
 
                 _firebaseReady = true;

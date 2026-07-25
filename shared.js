@@ -93,6 +93,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const _fb = firebase.database();
+        const _auth = firebase.auth();
 
         // ── EMAILJS (registration OTP) ──
         const EMAILJS_SERVICE_ID = 'Bolik';
@@ -195,9 +196,12 @@
             return _dbUsers;
         }
 
-        function saveUsers(u) {
-            _dbUsers = [...u];
-            return _ref.users.set(u).catch(e => {
+        // Targeted per-account write (as opposed to the old pattern of
+        // overwriting the whole users list every time) — the security rules
+        // gate writes per-uid, so every profile create/update goes through
+        // this instead of a blanket saveUsers(wholeArray).
+        function saveUserProfile(uid, data) {
+            return _ref.users.child(uid).update(data).catch(e => {
                 toast('User DB Error: ' + e.message, 'error');
                 throw e;
             });
@@ -357,34 +361,6 @@
                         ${actions}
                     </div>`;
                 }).join('');
-            }
-        }
-
-        function initSuperadmin() {
-            const idx = _dbUsers.findIndex(x => x && x.email === SUPERADMIN_EMAIL);
-            if (idx === -1) {
-                _dbUsers.push({
-                    email: SUPERADMIN_EMAIL,
-                    password: 'admin123',
-                    name: 'Boris Sargsyan',
-                    role: 'superadmin'
-                });
-                saveUsers(_dbUsers);
-            } else {
-                let changed = false;
-                if (_dbUsers[idx].role !== 'superadmin') {
-                    _dbUsers[idx].role = 'superadmin';
-                    changed = true;
-                }
-                if (_dbUsers[idx].password !== 'admin123') {
-                    _dbUsers[idx].password = 'admin123';
-                    changed = true;
-                }
-                if (_dbUsers[idx].name !== 'Boris Sargsyan') {
-                    _dbUsers[idx].name = 'Boris Sargsyan';
-                    changed = true;
-                }
-                if (changed) saveUsers(_dbUsers);
             }
         }
 
