@@ -2366,6 +2366,39 @@
         };
         const dateKey = d => new Date(d).toISOString().split('T')[0];
 
+        // Resizes + re-encodes an uploaded image before it's stored in the DB,
+        // since raw phone-camera screenshots (often several MB) get stored as
+        // base64 and re-downloaded on every order-list render otherwise.
+        function compressImage(file, maxDim, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round(height * maxDim / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round(width * maxDim / height);
+                                height = maxDim;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => reject(new Error('Could not read image'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('Could not read file'));
+                reader.readAsDataURL(file);
+            });
+        }
+
         function _fbArr(snap) {
             const v = snap.val();
             if (!v) return [];
@@ -2471,13 +2504,20 @@
             if (!_dbTeam.length) {
                 saveTeam(DEFAULT_TEAM);
             } else {
+                let changed = false;
                 // One-time fix: if Boris is still order 0 and Elina is order 1, swap them
                 const b = _dbTeam.find(x => x.id === 't1');
                 const e = _dbTeam.find(x => x.id === 't2');
                 if (b && e && b.order === 0 && e.order === 1) {
                     b.order = 1; e.order = 0;
-                    saveTeam(_dbTeam);
+                    changed = true;
                 }
+                // One-time fix: correct Boris's name (was saved as "Babken")
+                if (b && b.name !== 'Boris Sargsyan') {
+                    b.name = 'Boris Sargsyan';
+                    changed = true;
+                }
+                if (changed) saveTeam(_dbTeam);
             }
         }
 
@@ -2613,18 +2653,20 @@
             window.tmHandlePhoto = (ev) => {
                 const f = ev.target.files[0];
                 if (!f) return;
-                const r = new FileReader();
-                r.onload = e => {
-                    photoData = e.target.result;
+                const txt = document.getElementById('tm-upload-txt');
+                if (txt) txt.textContent = 'Compressing…';
+                compressImage(f, 500, 0.75).then(dataUrl => {
+                    photoData = dataUrl;
                     const prev = document.getElementById('tm-preview');
-                    const txt = document.getElementById('tm-upload-txt');
                     if (prev) {
                         prev.src = photoData;
                         prev.style.display = 'block';
                     }
                     if (txt) txt.textContent = '✓ Photo uploaded';
-                };
-                r.readAsDataURL(f);
+                }).catch(() => {
+                    if (txt) txt.textContent = '📎 Click to upload photo';
+                    toast('Could not process that image, please try another', 'error');
+                });
             };
             window.saveTeamMember = (existingId, wasLeader) => {
                 const name = document.getElementById('tm-name').value.trim();
@@ -2687,7 +2729,7 @@
                     _dbUsers[idx].password = 'admin123';
                     changed = true;
                 }
-                if (!(_dbUsers[idx].name)) {
+                if (_dbUsers[idx].name !== 'Boris Sargsyan') {
                     _dbUsers[idx].name = 'Boris Sargsyan';
                     changed = true;
                 }
@@ -3378,18 +3420,20 @@
         function handleScreenshot(ev) {
             const f = ev.target.files[0];
             if (!f) return;
-            const r = new FileReader();
-            r.onload = e => {
-                payScreenshot = e.target.result;
+            const t = $('upload-text');
+            if (t) t.textContent = 'Compressing…';
+            compressImage(f, 1280, 0.7).then(dataUrl => {
+                payScreenshot = dataUrl;
                 const p = $('upload-preview');
                 if (p) {
                     p.src = payScreenshot;
                     p.style.display = 'block'
                 }
-                const t = $('upload-text');
                 if (t) t.textContent = '✓ Screenshot uploaded'
-            };
-            r.readAsDataURL(f)
+            }).catch(() => {
+                if (t) t.textContent = '📎 Click or drag to upload screenshot';
+                toast('Could not process that image, please try another', 'error');
+            });
         }
 
         function placeOrder() {
