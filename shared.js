@@ -127,7 +127,16 @@
             localStorage.setItem(k, JSON.stringify(v))
         };
         const fmt = n => '֏' + n.toLocaleString();
-        const genId = () => 'BO-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        // Timestamp component + random suffix, rather than 4 random base36
+        // chars alone (~1.7M possible values, realistic collision risk at
+        // scale) — genOrderId() below also checks for an actual collision.
+        const genId = () => 'BO-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 3).toUpperCase();
+
+        function genOrderId() {
+            let id = genId();
+            while (getOrders().some(o => o.id === id)) id = genId();
+            return id;
+        }
         const fmtDate = d => {
             const o = new Date(d);
             return o.toLocaleDateString('en-GB', {
@@ -183,9 +192,21 @@
         function validEmail(email) {
             return email.endsWith('@uwcdilijan.am') || email.endsWith('@student.uwcdilijan.am');
         }
+
+        // Escapes a value before it's dropped into an innerHTML template
+        // literal, so a name/note/bio containing markup can't inject script
+        // or break out of an attribute (stored XSS).
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
         const _itemDetail = i => {
-            let d = `<span style="opacity:0.8">Syrup:</span> ${i.syrup}`;
-            if (i.bubbles && i.bubbles.length) d += ` | <span style="opacity:0.8">Bubbles:</span> ${i.bubbles.join(', ')}`;
+            let d = `<span style="opacity:0.8">Syrup:</span> ${escapeHtml(i.syrup)}`;
+            if (i.bubbles && i.bubbles.length) d += ` | <span style="opacity:0.8">Bubbles:</span> ${escapeHtml(i.bubbles.join(', '))}`;
             if (i.bubbleAmount === 'extra' || i.extraBubbles) d +=
                 ' <span style="display:inline-block;background:var(--amber);color:#fff;padding:0 6px;border-radius:4px;font-weight:900;font-size:0.75rem;margin-left:5px;vertical-align:middle;box-shadow:0 0 10px rgba(217, 123, 168, 0.4)">EXTRA BUBBLES</span>';
             return d;
@@ -324,8 +345,8 @@
 
             lg.innerHTML = leaders.map(m => {
                 const photo = m.photo ?
-                    `<img src="${m.photo}" class="leader-photo-img" alt="${m.name}">` :
-                    `<div class="leader-initials-div">${getInitials(m.name)}</div>`;
+                    `<img src="${m.photo}" class="leader-photo-img" alt="${escapeHtml(m.name)}">` :
+                    `<div class="leader-initials-div">${escapeHtml(getInitials(m.name))}</div>`;
                 const actions = canManageLeaders ?
                     `<div class="card-admin-btns">
                         <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">✏️ Edit</button>
@@ -333,9 +354,9 @@
                        </div>` : '';
                 return `<div class="leader-card-new">
                     ${photo}
-                    <h4>${m.name}</h4>
-                    <div class="leader-card-title">${m.title}</div>
-                    <div class="leader-card-desc">${m.description || ''}</div>
+                    <h4>${escapeHtml(m.name)}</h4>
+                    <div class="leader-card-title">${escapeHtml(m.title)}</div>
+                    <div class="leader-card-desc">${escapeHtml(m.description || '')}</div>
                     ${actions}
                 </div>`;
             }).join('');
@@ -346,8 +367,8 @@
             } else {
                 tg.innerHTML = others.map(m => {
                     const photo = m.photo ?
-                        `<img src="${m.photo}" class="team-photo-img" alt="${m.name}">` :
-                        `<div class="team-initials-div">${getInitials(m.name)}</div>`;
+                        `<img src="${m.photo}" class="team-photo-img" alt="${escapeHtml(m.name)}">` :
+                        `<div class="team-initials-div">${escapeHtml(getInitials(m.name))}</div>`;
                     const actions = canManageOthers ?
                         `<div class="card-admin-btns" style="margin-top:16px">
                             <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">✏️ Edit</button>
@@ -355,9 +376,9 @@
                            </div>` : '';
                     return `<div class="team-card-new">
                         ${photo}
-                        <h4>${m.name}</h4>
-                        <div class="team-card-title">${m.title}</div>
-                        <div class="team-card-desc">${m.description || ''}</div>
+                        <h4>${escapeHtml(m.name)}</h4>
+                        <div class="team-card-title">${escapeHtml(m.title)}</div>
+                        <div class="team-card-desc">${escapeHtml(m.description || '')}</div>
                         ${actions}
                     </div>`;
                 }).join('');

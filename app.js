@@ -9,6 +9,7 @@
             cashAmount = '';
         let deliveryOption = 'delivery';
         const DELIVERY_FEE = 200;
+        const EXTRA_BUBBLE_FEE = 400;
 
         function logout() {
             _auth.signOut().then(() => {
@@ -149,14 +150,14 @@
                     </div>
                     <span class="status-badge ${o.status}">${o.status}</span>
                 </div>
-                <div class="oc-customer">${o.customerName} (${o.customerEmail})</div>
+                <div class="oc-customer">${escapeHtml(o.customerName)} (${escapeHtml(o.customerEmail)})</div>
                 <div class="oc-items">
-                    ${(o.items || []).map(i => `${i.emoji} ${i.name} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}
+                    ${(o.items || []).map(i => `${i.emoji} ${escapeHtml(i.name)} x${i.quantity} — ${_itemDetail(i)}`).join('<br>')}
                 </div>
                 <div class="oc-meta">
-                    <span>📍 ${o.deliveryNote}</span>
+                    <span>📍 ${escapeHtml(o.deliveryNote)}</span>
                     <span>💰 ${o.paymentMethod === 'cash' ? 'Cash ' + bill : 'Card'} ${ss}</span>
-                    ${o.takenBy ? `<span>👤 ${o.takenBy}</span>` : ''}
+                    ${o.takenBy ? `<span>👤 ${escapeHtml(o.takenBy)}</span>` : ''}
                 </div>
                 <div class="oc-total">${fmt(o.total)}</div>
                 ${actions.length ? `<div class="oc-actions">${actions.join('')}</div>` : ''}
@@ -384,7 +385,7 @@
                 c.className = 'menu-card';
                 c.style.animationDelay = i * .06 + 's';
                 c.innerHTML =
-                    `<span class="tag">${p.tag}</span><span class="emoji">${p.emoji}</span><h3>${p.name}</h3><p class="desc">${p.description}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><button class="btn-add" onclick="event.stopPropagation();openCustomize(${p.id})">Customize & Add</button></div>`;
+                    `<span class="tag">${escapeHtml(p.tag)}</span><span class="emoji">${p.emoji}</span><h3>${escapeHtml(p.name)}</h3><p class="desc">${escapeHtml(p.description)}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><button class="btn-add" onclick="event.stopPropagation();openCustomize(${p.id})">Customize & Add</button></div>`;
                 c.onclick = () => openCustomize(p.id);
                 g.appendChild(c);
             });
@@ -405,17 +406,17 @@
             let qty = 1;
 
             function render() {
-                const totalPrice = (p.price + (bubbleAmount === 'extra' ? 400 : 0)) * qty;
+                const totalPrice = (p.price + (bubbleAmount === 'extra' ? EXTRA_BUBBLE_FEE : 0)) * qty;
                 ov.innerHTML = `<div class="modal"><button class="modal-close" onclick="document.getElementById('modal-overlay').classList.add('hidden')">✕</button>
-    <span style="font-size:2.5rem">${p.emoji}</span><h2 style="margin-top:8px">${p.name}</h2><p class="modal-sub">${fmt(p.price)} per drink</p>
+    <span style="font-size:2.5rem">${p.emoji}</span><h2 style="margin-top:8px">${escapeHtml(p.name)}</h2><p class="modal-sub">${fmt(p.price)} per drink</p>
     <div class="step-label"><span class="num">1</span>Choose Your Syrup</div>
-    <div class="syrup-grid">${currentSyrups.map(s => `<div class="syrup-opt${s === selSyrup ? ' active' : ''}" onclick="window._cSyrup('${s}')">${s}</div>`).join('')}</div>
+    <div class="syrup-grid">${currentSyrups.map(s => `<div class="syrup-opt${s === selSyrup ? ' active' : ''}" onclick="window._cSyrup('${s}')">${escapeHtml(s)}</div>`).join('')}</div>
     <div class="step-label"><span class="num">2</span>Choose Your Bubbles</div>
-    <div class="bubble-grid">${currentBubbles.map(t => `<div class="bubble-opt${selBubbles.includes(t.name) ? ' active' : ''}" onclick="window._cBub('${t.name}')">${t.emoji} ${t.name}</div>`).join('')}</div>
+    <div class="bubble-grid">${currentBubbles.map(t => `<div class="bubble-opt${selBubbles.includes(t.name) ? ' active' : ''}" onclick="window._cBub('${t.name}')">${t.emoji} ${escapeHtml(t.name)}</div>`).join('')}</div>
     <div class="step-label"><span class="num">3</span>Bubbles Amount</div>
     <div class="syrup-grid">
         <div class="syrup-opt${bubbleAmount === 'standard' ? ' active' : ''}" onclick="window._cAmount('standard')">Standard</div>
-        <div class="syrup-opt${bubbleAmount === 'extra' ? ' active' : ''}" onclick="window._cAmount('extra')">Extra (+${fmt(400)})</div>
+        <div class="syrup-opt${bubbleAmount === 'extra' ? ' active' : ''}" onclick="window._cAmount('extra')">Extra (+${fmt(EXTRA_BUBBLE_FEE)})</div>
     </div>
     <div class="qty-row"><label>Quantity</label><div class="qty-controls"><button onclick="window._cQty(-1)">−</button><span>${qty}</span><button onclick="window._cQty(1)">+</button></div></div>
     <button class="btn-primary" onclick="window._cAdd()">Add to Cart — ${fmt(totalPrice)}</button></div>`;
@@ -438,7 +439,7 @@
                 render()
             };
             window._cAdd = () => {
-                const finalUnitPrice = p.price + (bubbleAmount === 'extra' ? 400 : 0);
+                const finalUnitPrice = p.price + (bubbleAmount === 'extra' ? EXTRA_BUBBLE_FEE : 0);
                 cart.push({
                     productId: p.id,
                     productName: p.name,
@@ -488,7 +489,7 @@
                 return
             }
             ci.innerHTML = cart.map((item, i) =>
-                `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${item.productName}</div><div class="ci-detail">${_itemDetail(item)}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`
+                `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${escapeHtml(item.productName)}</div><div class="ci-detail">${_itemDetail(item)}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`
             ).join('');
             const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
             cf.innerHTML =
@@ -523,7 +524,7 @@
             payMethod = 'cash';
             
             m.innerHTML = `<div class="checkout-card"><h2>Checkout</h2>
-    <div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${i.productName} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${_itemDetail(i)})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
+    <div class="order-summary-items">${cart.map(i => `<div class="osi"><span class="osi-name">${i.emoji} ${escapeHtml(i.productName)} x${i.quantity} <span style="color:var(--taupe);font-size:.8rem">(${_itemDetail(i)})</span></span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
     ${deliveryOption === 'delivery' ? `<div class="osi"><span class="osi-name">🚚 Delivery Fee</span><span class="osi-price">${fmt(DELIVERY_FEE)}</span></div>` : ''}
     <div class="divider"></div>
     <div class="osi"><strong>Total</strong><strong style="color:var(--amber);font-family:'Playfair Display',serif;font-size:1.4rem">${fmt(finalTotal)}</strong></div></div>
@@ -628,7 +629,7 @@
                 return;
             }
             const order = {
-                id: genId(),
+                id: genOrderId(),
                 customerEmail: currentUser.email,
                 customerName: currentUser.name,
                 items: cart.map(i => ({
@@ -677,10 +678,10 @@
     <p style="color:var(--taupe);margin-bottom:24px">Your drink is being prepared with care</p>
     <div style="background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);text-align:left;max-width:460px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;margin-bottom:16px"><span style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--amber)">${o.id}</span><span class="status-badge pending">Pending</span></div>
-    ${(o.items || []).map(i => `<div class="osi"><span>${i.emoji} ${i.name} x${i.quantity}</span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
+    ${(o.items || []).map(i => `<div class="osi"><span>${i.emoji} ${escapeHtml(i.name)} x${i.quantity}</span><span class="osi-price">${fmt(i.unitPrice * i.quantity)}</span></div>`).join('')}
     <div class="divider"></div>
     <div class="osi"><strong>Total</strong><strong style="color:var(--amber)">${fmt(o.total)}</strong></div>
-    <p style="margin-top:12px;font-size:.85rem;color:var(--taupe)">📍 ${o.deliveryNote}</p>
+    <p style="margin-top:12px;font-size:.85rem;color:var(--taupe)">📍 ${escapeHtml(o.deliveryNote)}</p>
     <p style="font-size:.85rem;color:var(--taupe)">💰 ${o.paymentMethod === 'cash' ? 'Cash — ֏' + Number(o.paymentDetails.billAmount).toLocaleString() : 'Card transfer'}</p>
     </div><button class="btn-primary" style="max-width:300px;margin:24px auto 0" onclick="navigate('menu')">Back to Menu</button></div>`;
         }
@@ -734,11 +735,11 @@
 
             ov.innerHTML = `<div class="modal">
                 <button class="modal-close" onclick="$('modal-overlay').classList.add('hidden')">✕</button>
-                <h2>${isNew ? 'Add Team Member' : 'Edit ' + m.name}</h2>
+                <h2>${isNew ? 'Add Team Member' : 'Edit ' + escapeHtml(m.name)}</h2>
                 <p class="modal-sub">${isLeader ? 'Leader card (superadmin only)' : 'Team member'}</p>
-                <div class="form-group"><label>Full Name</label><input id="tm-name" value="${m ? m.name : ''}"></div>
-                <div class="form-group"><label>Title / Role</label><input id="tm-title" value="${m ? m.title : ''}"></div>
-                <div class="form-group"><label>Description</label><textarea id="tm-desc" rows="3" style="resize:vertical">${m ? (m.description || '') : ''}</textarea></div>
+                <div class="form-group"><label>Full Name</label><input id="tm-name" value="${m ? escapeHtml(m.name) : ''}"></div>
+                <div class="form-group"><label>Title / Role</label><input id="tm-title" value="${m ? escapeHtml(m.title) : ''}"></div>
+                <div class="form-group"><label>Description</label><textarea id="tm-desc" rows="3" style="resize:vertical">${m ? escapeHtml(m.description || '') : ''}</textarea></div>
                 ${isNew ? `<div class="form-group"><label>Type</label>
                     <div style="display:flex;gap:8px">
                         <div class="role-opt" id="tm-type-other" onclick="tmSetLeader(false)" style="flex:1">Regular Employee</div>
@@ -879,7 +880,7 @@
                 return
             }
             w.innerHTML = `<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Customer</th><th>Location</th><th>Items</th><th>Total</th><th>Pay</th><th>Status</th><th>Time</th><th>Action</th></tr></thead><tbody>
-    ${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${o.customerName}<br><span style="color:var(--taupe);font-size:0.75rem">${o.customerEmail}</span></td><td style="font-size:0.85rem">${o.deliveryNote}</td><td style="font-size:0.85rem">${(o.items || []).map(i => i.emoji + ' ' + i.name).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails?.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:0.75rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
+    ${orders.map(o => `<tr><td style="color:var(--amber);font-weight:600">${o.id}</td><td>${escapeHtml(o.customerName)}<br><span style="color:var(--taupe);font-size:0.75rem">${escapeHtml(o.customerEmail)}</span></td><td style="font-size:0.85rem">${escapeHtml(o.deliveryNote)}</td><td style="font-size:0.85rem">${(o.items || []).map(i => i.emoji + ' ' + escapeHtml(i.name)).join(', ')}</td><td style="font-weight:600">${fmt(o.total)}</td><td>${o.paymentMethod === 'cash' ? 'Cash' : 'Card'}${o.paymentMethod === 'card' && o.paymentDetails?.screenshot ? ` <img src="${o.paymentDetails.screenshot}" class="screenshot-thumb" onclick="showImg('${o.id}')">` : ''}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td style="font-size:0.75rem">${fmtDate(o.timestamp)}</td><td><button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">Delete</button></td></tr>`).join('')}
     </tbody></table></div>`;
         }
 
@@ -930,7 +931,7 @@
     <button class="btn-primary" onclick="addProduct()">Add Product</button></div>
     <h3 style="margin-bottom:16px">Current Products (${products.length})</h3>
     <div class="orders-grid">${products.map(p => `<div class="order-card" style="display:flex;align-items:center;gap:16px">
-    <span style="font-size:2.5rem">${p.emoji}</span><div style="flex:1"><strong>${p.name}</strong><br><span style="color:var(--taupe);font-size:.85rem">${p.description}</span><br><span style="color:var(--amber);font-weight:600">${fmt(p.price)}</span> · <span class="status-badge pending" style="font-size:.7rem">${p.tag}</span></div>
+    <span style="font-size:2.5rem">${p.emoji}</span><div style="flex:1"><strong>${escapeHtml(p.name)}</strong><br><span style="color:var(--taupe);font-size:.85rem">${escapeHtml(p.description)}</span><br><span style="color:var(--amber);font-weight:600">${fmt(p.price)}</span> · <span class="status-badge pending" style="font-size:.7rem">${escapeHtml(p.tag)}</span></div>
     <button class="btn-danger btn-sm" onclick="deleteProduct(${p.id})">Delete</button></div>`).join('')}</div>`;
         }
 
@@ -980,7 +981,7 @@
     <button class="btn-primary" onclick="addSyrup()">Add Syrup</button></div>
     <h3 style="margin-bottom:16px">Current Syrups (${syrups.length})</h3>
     <div class="orders-grid">${syrups.map((s, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
-    <strong>${s}</strong><button class="btn-danger btn-sm" onclick="deleteSyrup(${idx})">Delete</button></div>`).join('')}</div>`;
+    <strong>${escapeHtml(s)}</strong><button class="btn-danger btn-sm" onclick="deleteSyrup(${idx})">Delete</button></div>`).join('')}</div>`;
         }
 
         function addSyrup() {
@@ -1021,7 +1022,7 @@
     <button class="btn-primary" onclick="addBubble()">Add Bubble</button></div>
     <h3 style="margin-bottom:16px">Current Bubbles (${bubbles.length})</h3>
     <div class="orders-grid">${bubbles.map((t, idx) => `<div class="order-card" style="display:flex;align-items:center;justify-content:space-between">
-    <span><span style="font-size:1.5rem;margin-right:8px">${t.emoji}</span><strong>${t.name}</strong></span><button class="btn-danger btn-sm" onclick="deleteBubble(${idx})">Delete</button></div>`).join('')}</div>`;
+    <span><span style="font-size:1.5rem;margin-right:8px">${t.emoji}</span><strong>${escapeHtml(t.name)}</strong></span><button class="btn-danger btn-sm" onclick="deleteBubble(${idx})">Delete</button></div>`).join('')}</div>`;
         }
 
         function addBubble() {
@@ -1059,7 +1060,7 @@
             const users = getUsers().filter(u => u && u.uid);
             c.innerHTML = `<h3 style="margin-bottom:16px">Registered Accounts (${users.length})</h3>
     <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>
-    ${users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>
+    ${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>
     <select class="role-changer" onchange="changeAccountRole('${u.uid}', this.value)" ${u.uid === currentUser.uid || u.role === 'superadmin' ? 'disabled' : ''} style="padding:4px;border-radius:4px;background:var(--surface);color:var(--text);border:1px solid var(--border)">
         <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>Customer</option>
         <option value="employee" ${u.role === 'employee' ? 'selected' : ''}>Staff</option>
@@ -1089,7 +1090,7 @@
                 el.innerHTML = `<h3 style="margin:24px 0 12px">Not Yet Migrated (${legacyEntries.length})</h3>
         <p style="color:var(--taupe);font-size:.85rem;margin-bottom:12px">These accounts registered before the security upgrade and will migrate automatically the next time they log in. You can remove old records manually below.</p>
         <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>
-        ${legacyEntries.map(([key, v]) => `<tr><td>${v.name || ''}</td><td>${v.email || ''}</td><td>${v.role || ''}</td><td><button class="btn-danger btn-sm" onclick="removeLegacyAccount('${key}')">Remove old record</button></td></tr>`).join('')}
+        ${legacyEntries.map(([key, v]) => `<tr><td>${escapeHtml(v.name || '')}</td><td>${escapeHtml(v.email || '')}</td><td>${escapeHtml(v.role || '')}</td><td><button class="btn-danger btn-sm" onclick="removeLegacyAccount('${key}')">Remove old record</button></td></tr>`).join('')}
         </tbody></table></div>`;
             }).catch(() => {});
         }
@@ -1137,13 +1138,13 @@
             if (leaders.length) {
                 html += `<div class="orders-grid" style="margin-bottom:32px">${leaders.map(m => {
                     const photoSize = "80px";
-                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:1.5rem">${getInitials(m.name)}</div>`;
+                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:1.5rem">${escapeHtml(getInitials(m.name))}</div>`;
                     return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
                         ${photo}
                         <div style="flex:1">
-                            <strong>${m.name}</strong><br>
-                            <span style="color:var(--amber);font-size:.85rem">${m.title}</span><br>
-                            <span style="color:var(--taupe);font-size:.8rem">${(m.description||'').substring(0,80)}${(m.description||'').length>80?'...':''}</span>
+                            <strong>${escapeHtml(m.name)}</strong><br>
+                            <span style="color:var(--amber);font-size:.85rem">${escapeHtml(m.title)}</span><br>
+                            <span style="color:var(--taupe);font-size:.8rem">${escapeHtml((m.description||'').substring(0,80))}${(m.description||'').length>80?'...':''}</span>
                         </div>
                         ${canManageLeaders ? `<div style="display:flex;flex-direction:column;gap:6px">
                             <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
@@ -1159,13 +1160,13 @@
             if (others.length) {
                 html += `<div class="orders-grid">${others.map(m => {
                     const photoSize = "80px";
-                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--taupe),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:1.5rem">${getInitials(m.name)}</div>`;
+                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--taupe),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:1.5rem">${escapeHtml(getInitials(m.name))}</div>`;
                     return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
                         ${photo}
                         <div style="flex:1">
-                            <strong>${m.name}</strong><br>
-                            <span style="color:var(--amber);font-size:.85rem">${m.title}</span><br>
-                            <span style="color:var(--taupe);font-size:.8rem">${(m.description||'').substring(0,80)}${(m.description||'').length>80?'...':''}</span>
+                            <strong>${escapeHtml(m.name)}</strong><br>
+                            <span style="color:var(--amber);font-size:.85rem">${escapeHtml(m.title)}</span><br>
+                            <span style="color:var(--taupe);font-size:.8rem">${escapeHtml((m.description||'').substring(0,80))}${(m.description||'').length>80?'...':''}</span>
                         </div>
                         <div style="display:flex;flex-direction:column;gap:6px">
                             <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
