@@ -17,51 +17,6 @@
             });
         }
 
-        function openChangePassword() {
-            const providers = (_auth.currentUser.providerData || []).map(p => p.providerId);
-            if (!providers.includes('password')) {
-                toast("You signed in with Google — there's no password to change.", 'info');
-                return;
-            }
-            const ov = $('modal-overlay');
-            ov.classList.remove('hidden');
-            ov.innerHTML = `<div class="modal">
-                <button class="modal-close" onclick="$('modal-overlay').classList.add('hidden')">✕</button>
-                <h2>Change Password</h2>
-                <p class="modal-sub">Update your account password</p>
-                <div class="form-group"><label>Current Password</label><input type="password" id="cp-current"></div>
-                <div class="form-group"><label>New Password</label><input type="password" id="cp-new" minlength="4"></div>
-                <div class="form-group"><label>Confirm New Password</label><input type="password" id="cp-confirm"></div>
-                <div class="form-error" id="cp-err"></div>
-                <button class="btn-primary" onclick="submitChangePassword()">Update Password</button>
-            </div>`;
-        }
-
-        function submitChangePassword() {
-            const current = $('cp-current').value;
-            const next = $('cp-new').value;
-            const confirmPass = $('cp-confirm').value;
-            if (next.length < 4) {
-                showErr('cp-err', 'New password must be at least 4 characters');
-                return;
-            }
-            if (next !== confirmPass) {
-                showErr('cp-err', 'New passwords do not match');
-                return;
-            }
-            const user = _auth.currentUser;
-            const cred = firebase.auth.EmailAuthProvider.credential(user.email, current);
-            user.reauthenticateWithCredential(cred).then(() => {
-                return user.updatePassword(next);
-            }).then(() => {
-                $('modal-overlay').classList.add('hidden');
-                toast('Password updated', 'success');
-            }).catch(err => {
-                showErr('cp-err', err.code === 'auth/wrong-password' ?
-                    'Current password is incorrect' : 'Could not update password: ' + err.message);
-            });
-        }
-
         // ── NAV ──
         function buildNav() {
             const nl = $('nav-links');
