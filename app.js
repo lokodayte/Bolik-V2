@@ -86,11 +86,12 @@
             if (showTake && o.status === 'pending') {
                 actions.push(`<button class="btn-take" onclick="takeOrder('${o.id}')">Take Order</button>`);
             }
-            if (o.status === 'preparing' && o.takenBy === currentUser.email) {
-                actions.push(`<button class="btn-ready" onclick="markOrder('${o.id}','ready')">Mark Ready</button>`);
-            }
-            if (o.status === 'ready' && o.takenBy === currentUser.email) {
-                actions.push(`<button class="btn-deliver" onclick="markOrder('${o.id}','delivered')">Mark Delivered</button>`);
+            // Collapsed from a 3-tap flow (take/ready/deliver) to 2 -- once
+            // claimed, one tap finishes it. 'ready' is still checked here
+            // so any order already sitting in that legacy state still gets
+            // a way to be completed after this change ships.
+            if ((o.status === 'preparing' || o.status === 'ready') && o.takenBy === currentUser.email) {
+                actions.push(`<button class="btn-deliver" onclick="markOrder('${o.id}','delivered')">Complete Order</button>`);
             }
 
             const ss = (o.paymentMethod === 'card' && o.paymentDetails?.screenshot)
@@ -156,10 +157,35 @@
             if (!o) return;
 
             o.status = status;
+            if (status === 'delivered') o.deliveredAt = new Date().toISOString();
             saveOrders(orders);
             toast('Order ' + id + ' marked as ' + status, 'success');
 
             refreshOrdersUI();
+        }
+
+        // Payment screenshots only matter as delivery proof -- once an
+        // order's been complete for a while nobody needs it anymore, and
+        // it's the single biggest thing bloating the DB. Sweeps the orders
+        // already in memory (staff/admin only) rather than a fresh fetch.
+        const SCREENSHOT_RETENTION_MS = 30 * 60 * 1000;
+        function cleanupOldScreenshots() {
+            const cutoff = Date.now() - SCREENSHOT_RETENTION_MS;
+            const orders = getOrders();
+            let changed = false;
+            orders.forEach(o => {
+                if (o.status === 'delivered' && o.deliveredAt && o.paymentDetails?.screenshot &&
+                    new Date(o.deliveredAt).getTime() < cutoff) {
+                    o.paymentDetails = { ...o.paymentDetails, screenshot: null };
+                    changed = true;
+                }
+            });
+            if (changed) saveOrders(orders);
+        }
+
+        function startScreenshotCleanup() {
+            cleanupOldScreenshots();
+            setInterval(cleanupOldScreenshots, 5 * 60 * 1000);
         }
 
 
@@ -321,32 +347,46 @@
             });
         }
 
-        function setupFirebaseListeners() {
-            const usersP = onceThenListen(_ref.users, snap => {
-                _dbUsers = _fbArr(snap);
-            }, err => console.warn('Users listener:', err.message));
+        function setupFirebaseListeners(profile) {
+            const isAdmin = profile.role === 'admin' || profile.role === 'superadmin';
 
-            const ordersP = onceThenListen(_ref.orders, snap => {
-                _dbOrders = _fbArr(snap);
-                if (_firebaseReady) refreshOrdersUI();
-            }, err => toast('Live updates blocked: ' + err.message, 'error'));
+            const promises = [
+                onceThenListen(_ref.orders, snap => {
+                    _dbOrders = _fbArr(snap);
+                    if (_firebaseReady) refreshOrdersUI();
+                }, err => toast('Live updates blocked: ' + err.message, 'error')),
 
-            const productsP = onceThenListen(_ref.products, snap => {
-                _dbProducts = _fbArr(snap);
-                if (_firebaseReady) refreshCurrentPage();
-            }, err => console.warn('Products listener:', err.message));
+                onceThenListen(_ref.products, snap => {
+                    _dbProducts = _fbArr(snap);
+                    if (_firebaseReady) refreshCurrentPage();
+                }, err => console.warn('Products listener:', err.message)),
 
-            const bubblesP = onceThenListen(_ref.bubbles, snap => {
-                _dbBubbles = _fbArr(snap);
-                if (_firebaseReady) refreshCurrentPage();
-            }, err => console.warn('Bubbles listener:', err.message));
+                onceThenListen(_ref.bubbles, snap => {
+                    _dbBubbles = _fbArr(snap);
+                    if (_firebaseReady) refreshCurrentPage();
+                }, err => console.warn('Bubbles listener:', err.message))
+            ];
 
-            const teamP = onceThenListen(_ref.team, snap => {
-                _dbTeam = _fbArr(snap);
-                if (_firebaseReady) renderLandingTeam();
-            }, err => console.warn('Team listener:', err.message));
+            // The full account list and team roster only ever get shown on
+            // admin-only screens (Accounts tab, Team Members tab) -- every
+            // customer and employee session used to download both of those
+            // in full on every single login for no reason. Skip them here;
+            // getUsers()/getTeam() are never called outside admin-gated code.
+            if (isAdmin) {
+                promises.push(onceThenListen(_ref.users, snap => {
+                    _dbUsers = _fbArr(snap);
+                }, err => console.warn('Users listener:', err.message)));
 
-            return Promise.all([usersP, ordersP, productsP, bubblesP, teamP]);
+                promises.push(onceThenListen(_ref.team, snap => {
+                    _dbTeam = _fbArr(snap);
+                    if (_firebaseReady) renderLandingTeam();
+                }, err => console.warn('Team listener:', err.message)));
+            } else {
+                _dbUsers = [profile];
+                _dbTeam = [];
+            }
+
+            return Promise.all(promises);
         }
 
 
@@ -1184,26 +1224,35 @@
             });
         });
 
+        // A single targeted read for exactly this account instead of
+        // pulling the whole users table just to find one row in it. A
+        // fresh registration/migration redirects only after its own
+        // profile write resolves, so this should already be visible; one
+        // short retry is a cheap safety net against a stray timing hiccup.
+        function readOwnProfile(uid, retriesLeft) {
+            return _ref.users.child(uid).once('value').then(snap => {
+                const p = snap.val();
+                if (p) return p;
+                if (retriesLeft > 0) {
+                    return new Promise(r => setTimeout(r, 500)).then(() => readOwnProfile(uid, retriesLeft - 1));
+                }
+                throw new Error('Your account profile could not be found. Please try logging in again.');
+            });
+        }
+
         function enterApp(authUser) {
-            // setupFirebaseListeners() attaches the live listeners this app
-            // relies on for real-time updates, and resolves once each has
-            // its first snapshot in hand — so the initial load rides on
-            // those same reads instead of firing a second, redundant
-            // once() read per ref on top of them.
-            Promise.all([
-                setupFirebaseListeners(),
-                _ref.syrups.once('value').then(snap => { _dbSyrups = _fbArr(snap); })
-            ]).then(() => {
-                const profile = _dbUsers.find(u => u && u.uid === authUser.uid);
-                if (profile) return profile;
-                // Profile write from a just-completed registration/migration
-                // may not have reached this fresh list read yet — go straight
-                // to its own path instead of failing.
-                return _ref.users.child(authUser.uid).once('value').then(s => {
-                    const p = s.val();
-                    if (!p) throw new Error('Your account profile could not be found. Please try logging in again.');
-                    return p;
-                });
+            readOwnProfile(authUser.uid, 1).then(profile => {
+                // setupFirebaseListeners() attaches the live listeners this
+                // app relies on for real-time updates, and resolves once
+                // each has its first snapshot in hand — so the initial load
+                // rides on those same reads instead of firing a second,
+                // redundant once() read per ref on top of them. It also
+                // knows the caller's role now, so it can skip fetching data
+                // that role never needs.
+                return Promise.all([
+                    setupFirebaseListeners(profile),
+                    _ref.syrups.once('value').then(snap => { _dbSyrups = _fbArr(snap); })
+                ]).then(() => profile);
             }).then(profile => {
                 // Seeding defaults and running the team migration both
                 // require admin/superadmin write permission under the
@@ -1219,6 +1268,7 @@
             }).then(profile => {
                 _firebaseReady = true;
                 startApp(profile);
+                if (profile.role !== 'customer') startScreenshotCleanup();
             }).catch(err => {
                 console.error('Firebase init error:', err);
                 toast('Connection failed: ' + err.message, 'error');
