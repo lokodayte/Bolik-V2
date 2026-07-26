@@ -30,23 +30,11 @@
             <div class="nav-links" id="nav-links"></div>
             <div class="nav-right">
                 <span class="nav-user" id="nav-user"></span>
-                <button class="cart-btn hidden" id="nav-cart" onclick="toggleCart()">🛒<span class="cart-badge hidden"
-                        id="cart-badge">0</span></button>
                 <button class="nav-logout" onclick="logout()">Sign Out</button>
             </div>
         </nav>
         <main id="main-content"></main>
     </div>
-
-    <div id="cart-panel">
-        <div class="cart-header">
-            <h2>Your Cart</h2><button class="modal-close" onclick="toggleCart()">✕</button>
-        </div>
-        <div class="cart-items" id="cart-items"></div>
-        <div class="cart-footer" id="cart-footer"></div>
-    </div>
-    <div id="cart-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:250"
-        onclick="toggleCart()"></div>
 
     <div id="modal-overlay" class="modal-overlay hidden"></div>
     <div id="img-modal" class="img-modal hidden" onclick="this.classList.add('hidden')"></div>

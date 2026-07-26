@@ -21,18 +21,14 @@
         function buildNav() {
             const nl = $('nav-links');
             nl.innerHTML = '';
-            const cb = $('nav-cart');
             if (currentUser.role === 'customer') {
                 nl.innerHTML =
                     '<button onclick="navigate(\'menu\')" data-nav="menu">Menu</button><button onclick="navigate(\'myorders\')" data-nav="myorders">My Orders</button>';
-                cb.classList.remove('hidden');
-                updateCartBadge();
             } else {
                 nl.innerHTML =
                     '<button onclick="navigate(\'pending\')" data-nav="pending">Pending Orders</button><button onclick="navigate(\'emporders\')" data-nav="emporders">My Orders</button>';
                 if (currentUser.role === 'superadmin' || currentUser.role === 'admin') nl.innerHTML +=
                     '<button onclick="navigate(\'admin\')" data-nav="admin">Admin</button>';
-                cb.classList.add('hidden');
             }
         }
 
@@ -48,7 +44,6 @@
             else if (page === 'admin') renderAdmin(m);
             else if (page === 'checkout') renderCheckout(m);
             else if (page === 'confirmation') renderConfirmation(m);
-            closeCart();
             // Scroll to top on page change (helps mobile)
             window.scrollTo(0, 0);
         }
@@ -417,7 +412,7 @@
                 c.className = 'menu-card';
                 c.style.animationDelay = i * .06 + 's';
                 c.innerHTML =
-                    `<span class="tag">${escapeHtml(p.tag)}</span><span class="emoji">${p.emoji}</span><h3>${escapeHtml(p.name)}</h3><p class="desc">${escapeHtml(p.description)}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><button class="btn-add" onclick="event.stopPropagation();openCustomize(${p.id})">Customize & Add</button></div>`;
+                    `<span class="tag">${escapeHtml(p.tag)}</span><span class="emoji">${p.emoji}</span><h3>${escapeHtml(p.name)}</h3><p class="desc">${escapeHtml(p.description)}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><button class="btn-add" onclick="event.stopPropagation();openCustomize(${p.id})">Order Now</button></div>`;
                 c.onclick = () => openCustomize(p.id);
                 g.appendChild(c);
             });
@@ -451,7 +446,7 @@
         <div class="syrup-opt${bubbleAmount === 'extra' ? ' active' : ''}" onclick="window._cAmount('extra')">Extra (+${fmt(EXTRA_BUBBLE_FEE)})</div>
     </div>
     <div class="qty-row"><label>Quantity</label><div class="qty-controls"><button onclick="window._cQty(-1)">−</button><span>${qty}</span><button onclick="window._cQty(1)">+</button></div></div>
-    <button class="btn-primary" onclick="window._cAdd()">Add to Cart — ${fmt(totalPrice)}</button></div>`;
+    <button class="btn-primary" onclick="window._cAdd()">Continue to Checkout — ${fmt(totalPrice)}</button></div>`;
             }
             window._cSyrup = s => {
                 selSyrup = s;
@@ -472,7 +467,10 @@
             };
             window._cAdd = () => {
                 const finalUnitPrice = p.price + (bubbleAmount === 'extra' ? EXTRA_BUBBLE_FEE : 0);
-                cart.push({
+                // Straight to checkout with just this drink instead of
+                // adding to a cart and requiring a separate step to get
+                // there -- one order, placed right after customizing it.
+                cart = [{
                     productId: p.id,
                     productName: p.name,
                     emoji: p.emoji,
@@ -481,63 +479,11 @@
                     bubbleAmount: bubbleAmount,
                     quantity: qty,
                     unitPrice: finalUnitPrice
-                });
-                updateCartBadge();
+                }];
                 ov.classList.add('hidden');
-                toast(p.name + ' added to cart', 'success')
+                navigate('checkout');
             };
             render();
-        }
-
-
-        // ── CART ──
-        function toggleCart() {
-            const p = $('cart-panel'),
-                o = $('cart-overlay');
-            p.classList.toggle('open');
-            o.classList.toggle('hidden')
-        }
-
-        function closeCart() {
-            $('cart-panel').classList.remove('open');
-            $('cart-overlay').classList.add('hidden')
-        }
-
-        function updateCartBadge() {
-            const b = $('cart-badge'),
-                n = cart.reduce((s, i) => s + i.quantity, 0);
-            b.textContent = n;
-            b.classList.toggle('hidden', n === 0);
-            renderCartItems()
-        }
-
-        function renderCartItems() {
-            const ci = $('cart-items'),
-                cf = $('cart-footer');
-            if (!cart.length) {
-                ci.innerHTML =
-                    '<div class="cart-empty"><span class="ce-icon">🛒</span><p>Your cart is empty.<br>Add something delicious!</p></div>';
-                cf.innerHTML = '';
-                return
-            }
-            ci.innerHTML = cart.map((item, i) =>
-                `<div class="cart-item"><span class="ci-emoji">${item.emoji}</span><div class="ci-info"><div class="ci-name">${escapeHtml(item.productName)}</div><div class="ci-detail">${_itemDetail(item)}</div><div class="ci-bottom"><span class="ci-price">${fmt(item.unitPrice * item.quantity)}</span><div class="ci-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.quantity}</span><button onclick="cartQty(${i},1)">+</button></div></div><button class="ci-remove" onclick="cartRemove(${i})">Remove</button></div></div>`
-            ).join('');
-            const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-            cf.innerHTML =
-                `<div class="cart-total"><span>Total</span><span class="amount">${fmt(total)}</span></div><button class="btn-primary" onclick="closeCart();navigate('checkout')">Proceed to Checkout</button>`;
-        }
-
-        function cartQty(i, d) {
-            cart[i].quantity = Math.max(1, cart[i].quantity + d);
-            updateCartBadge()
-        }
-
-        function cartRemove(i) {
-            const n = cart[i].productName;
-            cart.splice(i, 1);
-            updateCartBadge();
-            toast(n + ' removed', 'info')
         }
 
 
@@ -546,7 +492,7 @@
         function renderCheckout(m) {
             if (!cart.length) {
                 navigate('menu');
-                toast('Your cart is empty', 'error');
+                toast('Please choose a drink first', 'error');
                 return
             }
             const totalItems = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -689,7 +635,6 @@
             };
             createOrder(order);
             cart = [];
-            updateCartBadge();
             window._lastOrderId = order.id;
             navigate('confirmation');
         }
