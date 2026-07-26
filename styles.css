@@ -1917,9 +1917,11 @@
         }
 
         .team-grid-new {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
             gap: 20px;
+            width: 100%;
         }
 
         .team-card-new {
@@ -1927,6 +1929,7 @@
             border: none;
             border-radius: var(--radius);
             padding: 28px 20px;
+            width: 240px;
             text-align: center;
             transition: all 0.3s ease;
             box-shadow: 0 8px 24px rgba(217, 123, 168, 0.05);
