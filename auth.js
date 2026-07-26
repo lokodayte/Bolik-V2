@@ -283,11 +283,21 @@
                 });
             });
 
-            // Keep the public team grid live if it changes while someone's browsing.
-            _ref.team.on('value', function (snap) {
-                _dbTeam = _fbArr(snap);
-                if (_firebaseReady) renderLandingTeam();
-            }, err => console.warn('Team listener:', err.message));
+            // Keep the public team grid live if it changes while someone's
+            // browsing, resolving once with its first snapshot so this
+            // read also covers the initial load instead of a second,
+            // redundant once() read on top of it.
+            const teamP = new Promise((resolve, reject) => {
+                let settled = false;
+                _ref.team.on('value', function (snap) {
+                    _dbTeam = _fbArr(snap);
+                    if (_firebaseReady) renderLandingTeam();
+                    if (!settled) { settled = true; resolve(); }
+                }, err => {
+                    if (!settled) { settled = true; reject(err); }
+                    else console.warn('Team listener:', err.message);
+                });
+            });
 
             // Fetch both in parallel instead of one after the other. Note:
             // the team migration (initTeam) never runs from this page —
@@ -295,12 +305,9 @@
             // anonymous landing-page visitor doesn't have; it runs from
             // index.html's enterApp() instead, once an admin logs in.
             Promise.all([
-                _ref.users.once('value'),
-                _ref.team.once('value')
-            ]).then(([usersSnap, teamSnap]) => {
-                _dbUsers = _fbArr(usersSnap);
-                _dbTeam = _fbArr(teamSnap);
-
+                _ref.users.once('value').then(snap => { _dbUsers = _fbArr(snap); }),
+                teamP
+            ]).then(() => {
                 _firebaseReady = true;
                 renderLandingTeam();
             }).catch(err => {

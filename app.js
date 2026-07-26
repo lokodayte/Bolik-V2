@@ -302,30 +302,51 @@
             else if (currentPage === 'confirmation') renderConfirmation(m);
         }
 
+        // Attaches a live 'value' listener and resolves once with its first
+        // snapshot, so the initial load and the ongoing live sync share a
+        // single read instead of the old once()-plus-on() double fetch.
+        // An error before the first snapshot rejects (surfaces via the
+        // caller's .catch, same as a failed once() used to); an error after
+        // that is a live-update hiccup, handled the same way it always was.
+        function onceThenListen(ref, onSnap, onLiveError) {
+            return new Promise((resolve, reject) => {
+                let settled = false;
+                ref.on('value', snap => {
+                    onSnap(snap);
+                    if (!settled) { settled = true; resolve(); }
+                }, err => {
+                    if (!settled) { settled = true; reject(err); }
+                    else if (onLiveError) onLiveError(err);
+                });
+            });
+        }
+
         function setupFirebaseListeners() {
-            _ref.users.on('value', function (snap) {
+            const usersP = onceThenListen(_ref.users, snap => {
                 _dbUsers = _fbArr(snap);
             }, err => console.warn('Users listener:', err.message));
 
-            _ref.orders.on('value', function (snap) {
+            const ordersP = onceThenListen(_ref.orders, snap => {
                 _dbOrders = _fbArr(snap);
                 if (_firebaseReady) refreshOrdersUI();
             }, err => toast('Live updates blocked: ' + err.message, 'error'));
 
-            _ref.products.on('value', function (snap) {
+            const productsP = onceThenListen(_ref.products, snap => {
                 _dbProducts = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
             }, err => console.warn('Products listener:', err.message));
 
-            _ref.bubbles.on('value', function (snap) {
+            const bubblesP = onceThenListen(_ref.bubbles, snap => {
                 _dbBubbles = _fbArr(snap);
                 if (_firebaseReady) refreshCurrentPage();
             }, err => console.warn('Bubbles listener:', err.message));
 
-            _ref.team.on('value', function (snap) {
+            const teamP = onceThenListen(_ref.team, snap => {
                 _dbTeam = _fbArr(snap);
                 if (_firebaseReady) renderLandingTeam();
             }, err => console.warn('Team listener:', err.message));
+
+            return Promise.all([usersP, ordersP, productsP, bubblesP, teamP]);
         }
 
 
@@ -730,7 +751,12 @@
                 if (!f) return;
                 const txt = document.getElementById('tm-upload-txt');
                 if (txt) txt.textContent = 'Compressing…';
-                compressImage(f, 320, 0.65).then(dataUrl => {
+                // Leader cards (Elina & Boris) render nearly twice as large
+                // on-screen as the CAS cards and there are only ever two of
+                // them, so they get a noticeably higher-quality compression
+                // pass — negligible extra storage, much crisper photos.
+                const isLeader = category === 'leader' || window._tmCategory === 'leader';
+                compressImage(f, isLeader ? 640 : 320, isLeader ? 0.88 : 0.65).then(dataUrl => {
                     photoData = dataUrl;
                     const prev = document.getElementById('tm-preview');
                     if (prev) {
@@ -1159,26 +1185,15 @@
         });
 
         function enterApp(authUser) {
-            setupFirebaseListeners();
-
-            // Fetch everything in parallel instead of one round-trip at a
-            // time — with team photos this chain was previously the sum of
-            // six sequential fetches instead of the slowest single one.
+            // setupFirebaseListeners() attaches the live listeners this app
+            // relies on for real-time updates, and resolves once each has
+            // its first snapshot in hand — so the initial load rides on
+            // those same reads instead of firing a second, redundant
+            // once() read per ref on top of them.
             Promise.all([
-                _ref.users.once('value'),
-                _ref.orders.once('value'),
-                _ref.products.once('value'),
-                _ref.syrups.once('value'),
-                _ref.bubbles.once('value'),
-                _ref.team.once('value')
-            ]).then(([usersSnap, ordersSnap, productsSnap, syrupsSnap, bubblesSnap, teamSnap]) => {
-                _dbUsers = _fbArr(usersSnap);
-                _dbOrders = _fbArr(ordersSnap);
-                _dbProducts = _fbArr(productsSnap);
-                _dbSyrups = _fbArr(syrupsSnap);
-                _dbBubbles = _fbArr(bubblesSnap);
-                _dbTeam = _fbArr(teamSnap);
-
+                setupFirebaseListeners(),
+                _ref.syrups.once('value').then(snap => { _dbSyrups = _fbArr(snap); })
+            ]).then(() => {
                 const profile = _dbUsers.find(u => u && u.uid === authUser.uid);
                 if (profile) return profile;
                 // Profile write from a just-completed registration/migration
