@@ -3,9 +3,9 @@
     "bolik_users": {
       ".read": true,
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin' || (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' && (!data.exists() || data.child('role').val() !== 'superadmin')))",
         "role": {
-          ".validate": "root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin' || (!data.exists() && (newData.val() === 'customer' || newData.val() === 'employee' || (newData.val() === 'superadmin' && auth.token.email === 'b.sargsyan@student.uwcdilijan.am')))"
+          ".validate": "root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin' || (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' && data.child('role').val() !== 'superadmin' && (newData.val() === 'customer' || newData.val() === 'employee' || newData.val() === 'admin')) || (!data.exists() && (newData.val() === 'customer' || newData.val() === 'employee' || (newData.val() === 'superadmin' && auth.token.email === 'b.sargsyan@student.uwcdilijan.am')))"
         }
       }
     },
@@ -26,6 +26,10 @@
       ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
     },
     "bolik_team": {
+      ".read": true,
+      ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
+    },
+    "bolik_team_migrated_v2": {
       ".read": true,
       ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
     }

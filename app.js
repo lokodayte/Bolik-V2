@@ -712,7 +712,7 @@
             const team = getTeam();
             const m = team.find(x => x.id === id);
             if (!m) return;
-            if (m.isLeader && currentUser.role !== 'superadmin') {
+            if (m.category === 'leader' && currentUser.role !== 'superadmin') {
                 toast('Only Superadmin can delete leader cards', 'error');
                 return;
             }
@@ -727,9 +727,9 @@
             const team = getTeam();
             const m = id ? team.find(x => x.id === id) : null;
             const isNew = !m;
-            const isLeader = m ? m.isLeader : false;
+            const category = m ? m.category : null;
 
-            if (isLeader && currentUser.role !== 'superadmin') {
+            if (category === 'leader' && currentUser.role !== 'superadmin') {
                 toast('Only Superadmin can edit leader cards', 'error');
                 return;
             }
@@ -741,14 +741,16 @@
             ov.innerHTML = `<div class="modal">
                 <button class="modal-close" onclick="$('modal-overlay').classList.add('hidden')">✕</button>
                 <h2>${isNew ? 'Add Team Member' : 'Edit ' + escapeHtml(m.name)}</h2>
-                <p class="modal-sub">${isLeader ? 'Leader card (superadmin only)' : 'Team member'}</p>
+                <p class="modal-sub">${category === 'leader' ? 'Leader card (superadmin only)' : 'Team member'}</p>
                 <div class="form-group"><label>Full Name</label><input id="tm-name" value="${m ? escapeHtml(m.name) : ''}"></div>
                 <div class="form-group"><label>Title / Role</label><input id="tm-title" value="${m ? escapeHtml(m.title) : ''}"></div>
                 <div class="form-group"><label>Description</label><textarea id="tm-desc" rows="3" style="resize:vertical">${m ? escapeHtml(m.description || '') : ''}</textarea></div>
-                ${isNew ? `<div class="form-group"><label>Type</label>
-                    <div style="display:flex;gap:8px">
-                        <div class="role-opt" id="tm-type-other" onclick="tmSetLeader(false)" style="flex:1">Regular Employee</div>
-                        ${currentUser.role === 'superadmin' ? '<div class="role-opt" id="tm-type-leader" onclick="tmSetLeader(true)" style="flex:1">Leader (top card)</div>' : ''}
+                <div class="form-group"><label>LinkedIn URL (optional)</label><input id="tm-linkedin" placeholder="https://www.linkedin.com/in/..." value="${m ? escapeHtml(m.linkedin || '') : ''}"></div>
+                ${isNew ? `<div class="form-group"><label>Category</label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <div class="role-opt active" id="tm-type-current-cas" onclick="tmSetCategory('current-cas')" style="flex:1">Current CAS Leader</div>
+                        <div class="role-opt" id="tm-type-past-cas" onclick="tmSetCategory('past-cas')" style="flex:1">Past CAS Leader</div>
+                        ${currentUser.role === 'superadmin' ? '<div class="role-opt" id="tm-type-leader" onclick="tmSetCategory(\'leader\')" style="flex:1">Leader (top card)</div>' : ''}
                     </div></div>` : ''}
                 <div class="form-group"><label>Photo (optional)</label>
                     <div class="upload-area" style="padding:20px">
@@ -758,29 +760,22 @@
                     </div>
                 </div>
                 <div class="form-error" id="tm-err"></div>
-                <button class="btn-primary" onclick="saveTeamMember('${id || ''}', ${isLeader})">${isNew ? 'Add Member' : 'Save Changes'}</button>
+                <button class="btn-primary" onclick="saveTeamMember('${id || ''}')">${isNew ? 'Add Member' : 'Save Changes'}</button>
             </div>`;
 
-            let _isLeader = isLeader;
-            window.tmSetLeader = (val) => {
-                _isLeader = val;
-                document.querySelectorAll('#tm-type-other, #tm-type-leader').forEach(el => el.classList.remove(
-                    'active'));
-                const target = document.getElementById(val ? 'tm-type-leader' : 'tm-type-other');
+            window._tmCategory = 'current-cas';
+            window.tmSetCategory = (val) => {
+                document.querySelectorAll('#tm-type-current-cas, #tm-type-past-cas, #tm-type-leader').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById('tm-type-' + val);
                 if (target) target.classList.add('active');
-                window._tmIsLeader = val;
+                window._tmCategory = val;
             };
-            window._tmIsLeader = isLeader;
-            if (isNew) {
-                const otherEl = document.getElementById('tm-type-other');
-                if (otherEl) otherEl.classList.add('active');
-            }
             window.tmHandlePhoto = (ev) => {
                 const f = ev.target.files[0];
                 if (!f) return;
                 const txt = document.getElementById('tm-upload-txt');
                 if (txt) txt.textContent = 'Compressing…';
-                compressImage(f, 500, 0.75).then(dataUrl => {
+                compressImage(f, 320, 0.65).then(dataUrl => {
                     photoData = dataUrl;
                     const prev = document.getElementById('tm-preview');
                     if (prev) {
@@ -793,12 +788,17 @@
                     toast('Could not process that image, please try another', 'error');
                 });
             };
-            window.saveTeamMember = (existingId, wasLeader) => {
+            window.saveTeamMember = (existingId) => {
                 const name = document.getElementById('tm-name').value.trim();
                 const title = document.getElementById('tm-title').value.trim();
                 const desc = document.getElementById('tm-desc').value.trim();
+                const linkedin = document.getElementById('tm-linkedin').value.trim();
                 if (!name || !title) {
                     showErr('tm-err', 'Name and title are required');
+                    return;
+                }
+                if (linkedin && !/^https?:\/\//i.test(linkedin)) {
+                    showErr('tm-err', 'LinkedIn URL must start with http:// or https://');
                     return;
                 }
                 const team = getTeam();
@@ -810,19 +810,22 @@
                             name,
                             title,
                             description: desc,
-                            photo: photoData
+                            photo: photoData,
+                            linkedin
                         };
                     }
                 } else {
-                    const newIsLeader = window._tmIsLeader;
-                    const maxOrder = team.length ? Math.max(...team.map(x => x.order)) + 1 : 0;
+                    const newCategory = window._tmCategory || 'current-cas';
+                    const sameCategory = team.filter(x => x.category === newCategory);
+                    const maxOrder = sameCategory.length ? Math.max(...sameCategory.map(x => x.order)) + 1 : 0;
                     team.push({
                         id: 't' + Date.now(),
                         name,
                         title,
                         description: desc,
                         photo: photoData,
-                        isLeader: newIsLeader,
+                        linkedin,
+                        category: newCategory,
                         order: maxOrder
                     });
                 }
@@ -840,7 +843,7 @@
 
         function renderAdmin(m) {
             m.innerHTML = `<h1 class="page-title">Admin Panel</h1><p class="page-subtitle">Manage orders, products, accounts, and track revenue</p>
-    <div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'bubbles' ? 'active' : ''}" onclick="adminNav('bubbles')">🫧 Bubbles</button>${currentUser.role === 'superadmin' ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}<button class="${adminTab === 'team' ? 'active' : ''}" onclick="adminNav('team')">Team Members</button></div>
+    <div class="admin-tabs"><button class="${adminTab === 'history' ? 'active' : ''}" onclick="adminNav('history')">📋 Orders History</button><button class="${adminTab === 'profit' ? 'active' : ''}" onclick="adminNav('profit')">💰 Daily Profit</button><button class="${adminTab === 'products' ? 'active' : ''}" onclick="adminNav('products')">🧋 Products</button><button class="${adminTab === 'syrups' ? 'active' : ''}" onclick="adminNav('syrups')">🍯 Syrups</button><button class="${adminTab === 'bubbles' ? 'active' : ''}" onclick="adminNav('bubbles')">🫧 Bubbles</button>${(currentUser.role === 'superadmin' || currentUser.role === 'admin') ? `<button class="${adminTab === 'accounts' ? 'active' : ''}" onclick="adminNav('accounts')">👥 Accounts</button>` : ''}<button class="${adminTab === 'team' ? 'active' : ''}" onclick="adminNav('team')">Team Members</button></div>
     <div id="admin-content"></div>`;
             renderAdminTab();
         }
@@ -853,7 +856,7 @@
         }
 
         function renderAdminTab() {
-            if (currentUser.role !== 'superadmin' && adminTab === 'accounts') adminTab = 'history';
+            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin' && adminTab === 'accounts') adminTab = 'history';
             const c = $('admin-content');
             if (!c) return;
             if (adminTab === 'history') renderAdminHistory(c);
@@ -1061,19 +1064,23 @@
         }
 
         function renderAdminAccounts(c) {
-            if (currentUser.role !== 'superadmin') return;
+            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') return;
             const users = getUsers().filter(u => u && u.uid);
             c.innerHTML = `<h3 style="margin-bottom:16px">Registered Accounts (${users.length})</h3>
     <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>
-    ${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>
-    <select class="role-changer" onchange="changeAccountRole('${u.uid}', this.value)" ${u.uid === currentUser.uid || u.role === 'superadmin' ? 'disabled' : ''} style="padding:4px;border-radius:4px;background:var(--surface);color:var(--text);border:1px solid var(--border)">
+    ${users.map(u => {
+        const isSuperRow = u.role === 'superadmin';
+        const isSelf = u.uid === currentUser.uid;
+        return `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>
+    <select class="role-changer" onchange="changeAccountRole('${u.uid}', this.value)" ${isSelf || isSuperRow ? 'disabled' : ''} style="padding:4px;border-radius:4px;background:var(--surface);color:var(--text);border:1px solid var(--border)">
         <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>Customer</option>
         <option value="employee" ${u.role === 'employee' ? 'selected' : ''}>Staff</option>
         <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-        ${u.role === 'superadmin' ? '<option value="superadmin" selected>Superadmin</option>' : ''}
+        ${isSuperRow ? '<option value="superadmin" selected>Superadmin</option>' : ''}
     </select>
     </td>
-    <td>${u.uid === currentUser.uid ? '<span style="color:var(--taupe);font-size:.8rem">You</span>' : `<button class="btn-danger btn-sm" onclick="deleteAccount('${u.uid}','${u.email}')">Delete</button>`}</td></tr>`).join('')}
+    <td>${isSelf ? '<span style="color:var(--taupe);font-size:.8rem">You</span>' : isSuperRow ? '<span style="color:var(--taupe);font-size:.8rem">Protected</span>' : `<button class="btn-danger btn-sm" onclick="deleteAccount('${u.uid}','${u.email}')">Delete</button>`}</td></tr>`;
+    }).join('')}
     </tbody></table></div>
     <div id="legacy-accounts-section"></div>`;
             renderLegacyAccounts();
@@ -1101,7 +1108,7 @@
         }
 
         function removeLegacyAccount(key) {
-            if (currentUser.role !== 'superadmin') return;
+            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') return;
             if (!confirm('Remove this old-format record? The person will need to register again to get a new account.')) return;
             _ref.users.child(key).remove().then(() => {
                 toast('Old record removed', 'info');
@@ -1109,16 +1116,25 @@
             }).catch(e => toast('Could not remove: ' + e.message, 'error'));
         }
 
+        // Admins can promote/demote anyone up to and including admin — but
+        // never touch the superadmin's own record. The security rules
+        // enforce this server-side too; this check just avoids a pointless
+        // permission-denied round trip and keeps the UI honest.
         function changeAccountRole(uid, newRole) {
-            if (currentUser.role !== 'superadmin') return;
+            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') return;
+            const target = getUsers().find(u => u.uid === uid);
+            if (target && target.role === 'superadmin') return;
+            if (currentUser.role === 'admin' && newRole === 'superadmin') return;
             _ref.users.child(uid).update({ role: newRole }).then(() => {
                 toast('Role updated', 'success');
             }).catch(e => toast('Could not update role: ' + e.message, 'error'));
         }
 
         function deleteAccount(uid, email) {
-            if (currentUser.role !== 'superadmin') return;
+            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') return;
             if (uid === currentUser.uid) return;
+            const target = getUsers().find(u => u.uid === uid);
+            if (target && target.role === 'superadmin') return;
             _ref.users.child(uid).remove().then(() => {
                 let orders = getOrders().filter(o => o.customerEmail !== email);
                 saveOrders(orders);
@@ -1128,60 +1144,49 @@
         }
 
 
+        function adminTeamSectionHtml(members, canManage, gradient) {
+            if (!members.length) return '';
+            return `<div class="orders-grid" style="margin-bottom:32px">${members.map(m => {
+                const photoSize = "80px";
+                const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,${gradient});display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:1.5rem">${escapeHtml(getInitials(m.name))}</div>`;
+                return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
+                    ${photo}
+                    <div style="flex:1">
+                        <strong>${escapeHtml(m.name)}</strong><br>
+                        <span style="color:var(--amber);font-size:.85rem">${escapeHtml(m.title)}</span><br>
+                        <span style="color:var(--taupe);font-size:.8rem">${escapeHtml((m.description||'').substring(0,80))}${(m.description||'').length>80?'...':''}</span>
+                    </div>
+                    ${canManage ? `<div style="display:flex;flex-direction:column;gap:6px">
+                        <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
+                        <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">Delete</button>
+                    </div>` : '<span style="color:var(--taupe);font-size:.75rem">Superadmin only</span>'}
+                </div>`;
+            }).join('')}</div>`;
+        }
+
         function renderAdminTeam(c) {
             const team = getTeam();
-            const canManageLeaders = currentUser.role === 'superadmin';
-            const leaders = team.filter(m => m.isLeader).sort((a, b) => a.order - b.order);
-            const others = team.filter(m => !m.isLeader).sort((a, b) => a.order - b.order);
+            const isSuper = currentUser.role === 'superadmin';
+            const canManageOthers = isSuper || currentUser.role === 'admin';
+            const leaders = team.filter(m => m.category === 'leader').sort((a, b) => a.order - b.order);
+            const currentCas = team.filter(m => m.category === 'current-cas').sort((a, b) => a.order - b.order);
+            const pastCas = team.filter(m => m.category === 'past-cas').sort((a, b) => a.order - b.order);
 
             let html = `<div style="margin-bottom:24px;display:flex;gap:12px;flex-wrap:wrap">
                 <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openEditTeamMember('')">+ Add Team Member</button>
             </div>`;
 
-            html +=
-                `<h3 style="margin-bottom:12px;font-size:1.1rem">Leader Cards (Boris & Elina — Superadmin only)</h3>`;
-            if (leaders.length) {
-                html += `<div class="orders-grid" style="margin-bottom:32px">${leaders.map(m => {
-                    const photoSize = "80px";
-                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:1.5rem">${escapeHtml(getInitials(m.name))}</div>`;
-                    return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
-                        ${photo}
-                        <div style="flex:1">
-                            <strong>${escapeHtml(m.name)}</strong><br>
-                            <span style="color:var(--amber);font-size:.85rem">${escapeHtml(m.title)}</span><br>
-                            <span style="color:var(--taupe);font-size:.8rem">${escapeHtml((m.description||'').substring(0,80))}${(m.description||'').length>80?'...':''}</span>
-                        </div>
-                        ${canManageLeaders ? `<div style="display:flex;flex-direction:column;gap:6px">
-                            <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
-                            <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">Delete</button>
-                        </div>` : '<span style="color:var(--taupe);font-size:.75rem">Superadmin only</span>'}
-                    </div>`;
-                }).join('')}</div>`;
-            } else {
-                html += '<p style="color:var(--taupe);margin-bottom:24px">No leader cards yet.</p>';
-            }
+            html += `<h3 style="margin-bottom:12px;font-size:1.1rem">Our Leaders (Superadmin only)</h3>`;
+            html += leaders.length ? adminTeamSectionHtml(leaders, isSuper, 'var(--amber),var(--gold)') :
+                '<p style="color:var(--taupe);margin-bottom:24px">No leader cards yet.</p>';
 
-            html += `<h3 style="margin-bottom:12px;font-size:1.1rem">Team Members</h3>`;
-            if (others.length) {
-                html += `<div class="orders-grid">${others.map(m => {
-                    const photoSize = "80px";
-                    const photo = m.photo ? `<img src="${m.photo}" style="width:${photoSize};height:${photoSize};border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 4px 12px rgba(0,0,0,0.1)">` : `<div style="width:${photoSize};height:${photoSize};border-radius:50%;background:linear-gradient(135deg,var(--taupe),var(--amber));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:1.5rem">${escapeHtml(getInitials(m.name))}</div>`;
-                    return `<div class="order-card" style="display:flex;align-items:center;gap:16px">
-                        ${photo}
-                        <div style="flex:1">
-                            <strong>${escapeHtml(m.name)}</strong><br>
-                            <span style="color:var(--amber);font-size:.85rem">${escapeHtml(m.title)}</span><br>
-                            <span style="color:var(--taupe);font-size:.8rem">${escapeHtml((m.description||'').substring(0,80))}${(m.description||'').length>80?'...':''}</span>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:6px">
-                            <button class="btn-outline btn-sm" onclick="openEditTeamMember('${m.id}')">Edit</button>
-                            <button class="btn-danger btn-sm" onclick="deleteTeamMember('${m.id}')">Delete</button>
-                        </div>
-                    </div>`;
-                }).join('')}</div>`;
-            } else {
-                html += '<p style="color:var(--taupe)">No other team members yet. Click "Add Team Member" above.</p>';
-            }
+            html += `<h3 style="margin-bottom:12px;font-size:1.1rem">Current CAS Leaders</h3>`;
+            html += currentCas.length ? adminTeamSectionHtml(currentCas, canManageOthers, 'var(--taupe),var(--amber)') :
+                '<p style="color:var(--taupe);margin-bottom:24px">No current CAS leaders yet.</p>';
+
+            html += `<h3 style="margin-bottom:12px;font-size:1.1rem">Past CAS Leaders</h3>`;
+            html += pastCas.length ? adminTeamSectionHtml(pastCas, canManageOthers, 'var(--taupe),var(--amber)') :
+                '<p style="color:var(--taupe)">No past CAS leaders yet. Click "Add Team Member" above.</p>';
 
             c.innerHTML = html;
         }
@@ -1201,44 +1206,49 @@
         function enterApp(authUser) {
             setupFirebaseListeners();
 
-            _ref.users.once('value').then(snap => {
-                _dbUsers = _fbArr(snap);
-                return _ref.orders.once('value');
-            }).then(snap => {
-                _dbOrders = _fbArr(snap);
-                return _ref.products.once('value');
-            }).then(snap => {
-                _dbProducts = _fbArr(snap);
-                return _ref.syrups.once('value');
-            }).then(snap => {
-                _dbSyrups = _fbArr(snap);
-                return _ref.bubbles.once('value');
-            }).then(snap => {
-                _dbBubbles = _fbArr(snap);
-                return _ref.team.once('value');
-            }).then(snap => {
-                _dbTeam = _fbArr(snap);
-
-                initTeam();
-                if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
-                if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
-                if (!_dbBubbles.length) saveBubbles([...DEFAULT_BUBBLES]);
-
-                _firebaseReady = true;
+            // Fetch everything in parallel instead of one round-trip at a
+            // time — with team photos this chain was previously the sum of
+            // six sequential fetches instead of the slowest single one.
+            Promise.all([
+                _ref.users.once('value'),
+                _ref.orders.once('value'),
+                _ref.products.once('value'),
+                _ref.syrups.once('value'),
+                _ref.bubbles.once('value'),
+                _ref.team.once('value')
+            ]).then(([usersSnap, ordersSnap, productsSnap, syrupsSnap, bubblesSnap, teamSnap]) => {
+                _dbUsers = _fbArr(usersSnap);
+                _dbOrders = _fbArr(ordersSnap);
+                _dbProducts = _fbArr(productsSnap);
+                _dbSyrups = _fbArr(syrupsSnap);
+                _dbBubbles = _fbArr(bubblesSnap);
+                _dbTeam = _fbArr(teamSnap);
 
                 const profile = _dbUsers.find(u => u && u.uid === authUser.uid);
-                if (profile) {
-                    startApp(profile);
-                    return;
-                }
+                if (profile) return profile;
                 // Profile write from a just-completed registration/migration
                 // may not have reached this fresh list read yet — go straight
                 // to its own path instead of failing.
                 return _ref.users.child(authUser.uid).once('value').then(s => {
                     const p = s.val();
                     if (!p) throw new Error('Your account profile could not be found. Please try logging in again.');
-                    startApp(p);
+                    return p;
                 });
+            }).then(profile => {
+                // Seeding defaults and running the team migration both
+                // require admin/superadmin write permission under the
+                // security rules — skip them entirely for everyone else
+                // instead of surfacing a permission-denied error toast.
+                const canManage = profile.role === 'admin' || profile.role === 'superadmin';
+                if (canManage) {
+                    if (!_dbProducts.length) saveProducts([...DEFAULT_PRODUCTS]);
+                    if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
+                    if (!_dbBubbles.length) saveBubbles([...DEFAULT_BUBBLES]);
+                }
+                return initTeam(canManage).then(() => profile);
+            }).then(profile => {
+                _firebaseReady = true;
+                startApp(profile);
             }).catch(err => {
                 console.error('Firebase init error:', err);
                 toast('Connection failed: ' + err.message, 'error');

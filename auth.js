@@ -330,13 +330,17 @@
                 if (_firebaseReady) renderLandingTeam();
             }, err => console.warn('Team listener:', err.message));
 
-            _ref.users.once('value').then(snap => {
-                _dbUsers = _fbArr(snap);
-                return _ref.team.once('value');
-            }).then(snap => {
-                _dbTeam = _fbArr(snap);
-
-                initTeam();
+            // Fetch both in parallel instead of one after the other. Note:
+            // the team migration (initTeam) never runs from this page —
+            // it requires admin/superadmin write permission that an
+            // anonymous landing-page visitor doesn't have; it runs from
+            // index.html's enterApp() instead, once an admin logs in.
+            Promise.all([
+                _ref.users.once('value'),
+                _ref.team.once('value')
+            ]).then(([usersSnap, teamSnap]) => {
+                _dbUsers = _fbArr(usersSnap);
+                _dbTeam = _fbArr(teamSnap);
 
                 _firebaseReady = true;
                 renderLandingTeam();
