@@ -11,6 +11,11 @@
     },
     "bolik_orders": {
       ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["customerEmail"]
+    },
+    "bolik_orders_migrated_v1": {
+      ".read": true,
       ".write": "auth != null"
     },
     "bolik_products": {

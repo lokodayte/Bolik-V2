@@ -135,15 +135,10 @@
         }
 
         function takeOrder(id) {
-            let orders = getOrders();
-            const o = orders.find(x => x.id === id);
-
+            const o = getOrders().find(x => x.id === id);
             if (!o || o.status !== 'pending') return;
 
-            o.status = 'preparing';
-            o.takenBy = currentUser.email;
-
-            saveOrders(orders);
+            updateOrder(id, { status: 'preparing', takenBy: currentUser.email });
             toast('Order ' + id + ' claimed!', 'success');
 
             // stay on whichever employee page the user is already using
@@ -151,14 +146,12 @@
         }
 
         function markOrder(id, status) {
-            let orders = getOrders();
-            const o = orders.find(x => x.id === id);
-
+            const o = getOrders().find(x => x.id === id);
             if (!o) return;
 
-            o.status = status;
-            if (status === 'delivered') o.deliveredAt = new Date().toISOString();
-            saveOrders(orders);
+            const changes = { status };
+            if (status === 'delivered') changes.deliveredAt = new Date().toISOString();
+            updateOrder(id, changes);
             toast('Order ' + id + ' marked as ' + status, 'success');
 
             refreshOrdersUI();
@@ -167,20 +160,17 @@
         // Payment screenshots only matter as delivery proof -- once an
         // order's been complete for a while nobody needs it anymore, and
         // it's the single biggest thing bloating the DB. Sweeps the orders
-        // already in memory (staff/admin only) rather than a fresh fetch.
+        // already in memory (staff/admin only) rather than a fresh fetch,
+        // and only writes back the one field that changed per order.
         const SCREENSHOT_RETENTION_MS = 30 * 60 * 1000;
         function cleanupOldScreenshots() {
             const cutoff = Date.now() - SCREENSHOT_RETENTION_MS;
-            const orders = getOrders();
-            let changed = false;
-            orders.forEach(o => {
+            getOrders().forEach(o => {
                 if (o.status === 'delivered' && o.deliveredAt && o.paymentDetails?.screenshot &&
                     new Date(o.deliveredAt).getTime() < cutoff) {
-                    o.paymentDetails = { ...o.paymentDetails, screenshot: null };
-                    changed = true;
+                    updateOrder(o.id, { paymentDetails: { ...o.paymentDetails, screenshot: null } });
                 }
             });
-            if (changed) saveOrders(orders);
         }
 
         function startScreenshotCleanup() {
@@ -349,22 +339,22 @@
 
         function setupFirebaseListeners(profile) {
             const isAdmin = profile.role === 'admin' || profile.role === 'superadmin';
+            const isCustomer = profile.role === 'customer';
+
+            // Staff/admin need to see every order to do their job. A
+            // customer only ever looks at their own -- querying by their
+            // own email instead of syncing the whole table (which used to
+            // happen for every role) is the same read pattern Firebase
+            // already supports, just scoped to what's actually shown.
+            const ordersRef = isCustomer
+                ? _ref.orders.orderByChild('customerEmail').equalTo(profile.email)
+                : _ref.orders;
 
             const promises = [
-                onceThenListen(_ref.orders, snap => {
+                onceThenListen(ordersRef, snap => {
                     _dbOrders = _fbArr(snap);
                     if (_firebaseReady) refreshOrdersUI();
-                }, err => toast('Live updates blocked: ' + err.message, 'error')),
-
-                onceThenListen(_ref.products, snap => {
-                    _dbProducts = _fbArr(snap);
-                    if (_firebaseReady) refreshCurrentPage();
-                }, err => console.warn('Products listener:', err.message)),
-
-                onceThenListen(_ref.bubbles, snap => {
-                    _dbBubbles = _fbArr(snap);
-                    if (_firebaseReady) refreshCurrentPage();
-                }, err => console.warn('Bubbles listener:', err.message))
+                }, err => toast('Live updates blocked: ' + err.message, 'error'))
             ];
 
             // The full account list and team roster only ever get shown on
@@ -373,6 +363,21 @@
             // in full on every single login for no reason. Skip them here;
             // getUsers()/getTeam() are never called outside admin-gated code.
             if (isAdmin) {
+                // Admins edit this data directly and need to see other
+                // admins' concurrent changes live, so this keeps the
+                // always-on listeners rather than the cache below.
+                promises.push(onceThenListen(_ref.products, snap => {
+                    _dbProducts = _fbArr(snap);
+                    if (_firebaseReady) refreshCurrentPage();
+                }, err => console.warn('Products listener:', err.message)));
+
+                promises.push(onceThenListen(_ref.bubbles, snap => {
+                    _dbBubbles = _fbArr(snap);
+                    if (_firebaseReady) refreshCurrentPage();
+                }, err => console.warn('Bubbles listener:', err.message)));
+
+                promises.push(_ref.syrups.once('value').then(snap => { _dbSyrups = _fbArr(snap); }));
+
                 promises.push(onceThenListen(_ref.users, snap => {
                     _dbUsers = _fbArr(snap);
                 }, err => console.warn('Users listener:', err.message)));
@@ -384,6 +389,12 @@
             } else {
                 _dbUsers = [profile];
                 _dbTeam = [];
+                // Customers/employees never edit the menu, so a live
+                // listener buys them nothing -- this checks one small
+                // version number and only re-downloads products/syrups/
+                // bubbles when something actually changed since their
+                // last visit, instead of on every single load.
+                promises.push(loadCatalogWithCache());
             }
 
             return Promise.all(promises);
@@ -676,9 +687,7 @@
                 timestamp: new Date().toISOString(),
                 takenBy: null
             };
-            const orders = getOrders();
-            orders.push(order);
-            saveOrders(orders);
+            createOrder(order);
             cart = [];
             updateCartBadge();
             window._lastOrderId = order.id;
@@ -915,8 +924,7 @@
 
         function deleteOrder(id) {
             if (!confirm('Are you sure you want to delete this order entirely?')) return;
-            let orders = getOrders().filter(o => o.id !== id);
-            saveOrders(orders);
+            removeOrder(id);
             toast('Order deleted forever', 'info');
             renderAdminTab()
         }
@@ -1157,8 +1165,8 @@
             const target = getUsers().find(u => u.uid === uid);
             if (target && target.role === 'superadmin') return;
             _ref.users.child(uid).remove().then(() => {
-                let orders = getOrders().filter(o => o.customerEmail !== email);
-                saveOrders(orders);
+                const theirOrders = getOrders().filter(o => o.customerEmail === email);
+                theirOrders.forEach(o => removeOrder(o.id));
                 toast('Account access removed', 'info');
                 renderAdminTab();
             }).catch(e => toast('Could not delete account: ' + e.message, 'error'));
@@ -1249,10 +1257,7 @@
                 // redundant once() read per ref on top of them. It also
                 // knows the caller's role now, so it can skip fetching data
                 // that role never needs.
-                return Promise.all([
-                    setupFirebaseListeners(profile),
-                    _ref.syrups.once('value').then(snap => { _dbSyrups = _fbArr(snap); })
-                ]).then(() => profile);
+                return setupFirebaseListeners(profile).then(() => profile);
             }).then(profile => {
                 // Seeding defaults and running the team migration both
                 // require admin/superadmin write permission under the
@@ -1264,7 +1269,11 @@
                     if (!_dbSyrups.length) saveSyrups([...DEFAULT_SYRUPS]);
                     if (!_dbBubbles.length) saveBubbles([...DEFAULT_BUBBLES]);
                 }
-                return initTeam(canManage).then(() => profile);
+                // migrateOrders() needs the full order list to rebuild it
+                // correctly, so only run it from a role that actually has
+                // that (customers only ever fetch their own orders below).
+                const migrateP = profile.role !== 'customer' ? migrateOrders() : Promise.resolve();
+                return Promise.all([initTeam(canManage), migrateP]).then(() => profile);
             }).then(profile => {
                 _firebaseReady = true;
                 startApp(profile);

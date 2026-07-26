@@ -104,12 +104,23 @@
         const _ref = {
             users: _fb.ref('bolik_users'),
             orders: _fb.ref('bolik_orders'),
+            ordersMigratedV1: _fb.ref('bolik_orders_migrated_v1'),
             products: _fb.ref('bolik_products'),
             syrups: _fb.ref('bolik_syrups'),
             bubbles: _fb.ref('bolik_bubbles'),
+            catalogVersion: _fb.ref('bolik_catalog_version'),
             team: _fb.ref('bolik_team'),
             teamMigratedV3: _fb.ref('bolik_team_migrated_v3')
         };
+
+        // Bumped on every products/syrups/bubbles save so customer/employee
+        // sessions can check one small number instead of re-downloading the
+        // whole menu just to find out nothing changed since their last visit.
+        function _bumpCatalogVersion() {
+            _ref.catalogVersion.once('value').then(snap => {
+                _ref.catalogVersion.set((snap.val() || 0) + 1);
+            });
+        }
 
         // ── STATE (shared across pages) ──
         let currentUser = null;
@@ -233,9 +244,53 @@
             return _dbOrders;
         }
 
-        function saveOrders(o) {
-            _dbOrders = [...o];
-            _ref.orders.set(o).catch(e => toast('Order DB Error: ' + e.message, 'error'));
+        // Orders used to be one big array, rewritten in full (every order,
+        // every embedded screenshot) on every single change -- claiming one
+        // drink re-uploaded the entire order history. These write only the
+        // one record that actually changed; migrateOrders() below is the
+        // one-time move to a storage shape (keyed by each order's own id)
+        // that makes that possible.
+        function createOrder(order) {
+            _dbOrders = [..._dbOrders, order];
+            return _ref.orders.child(order.id).set(order).catch(e => {
+                toast('Order DB Error: ' + e.message, 'error');
+                throw e;
+            });
+        }
+
+        function updateOrder(id, changes) {
+            const idx = _dbOrders.findIndex(o => o && o.id === id);
+            if (idx >= 0) _dbOrders[idx] = { ..._dbOrders[idx], ...changes };
+            return _ref.orders.child(id).update(changes).catch(e => {
+                toast('Order DB Error: ' + e.message, 'error');
+                throw e;
+            });
+        }
+
+        function removeOrder(id) {
+            _dbOrders = _dbOrders.filter(o => o && o.id !== id);
+            return _ref.orders.child(id).remove().catch(e => {
+                toast('Order DB Error: ' + e.message, 'error');
+                throw e;
+            });
+        }
+
+        // One-time move from the old plain-array storage (rewritten whole
+        // on every write) to an object keyed by each order's own id (so a
+        // single order can be created/updated/deleted with a targeted
+        // write). Safe to call from any authenticated session — orders
+        // are readable/writable by anyone logged in — and safe to re-run:
+        // it rebuilds the keyed object from whatever's currently there.
+        function migrateOrders() {
+            return _ref.ordersMigratedV1.once('value').then(snap => {
+                if (snap.val()) return;
+                return _ref.orders.once('value').then(ordersSnap => {
+                    const list = _fbArr(ordersSnap);
+                    const keyed = {};
+                    list.forEach(o => { if (o && o.id) keyed[o.id] = o; });
+                    return _ref.orders.set(keyed).then(() => _ref.ordersMigratedV1.set(true));
+                });
+            });
         }
 
         function getProducts() {
@@ -245,6 +300,7 @@
         function saveProducts(p) {
             _dbProducts = [...p];
             _ref.products.set(p).catch(e => toast('Product DB Error: ' + e.message, 'error'));
+            _bumpCatalogVersion();
         }
 
         function getSyrups() {
@@ -254,6 +310,7 @@
         function saveSyrups(s) {
             _dbSyrups = [...s];
             _ref.syrups.set(s).catch(e => toast('Syrups DB Error: ' + e.message, 'error'));
+            _bumpCatalogVersion();
         }
 
         function getBubbles() {
@@ -263,6 +320,34 @@
         function saveBubbles(t) {
             _dbBubbles = [...t];
             _ref.bubbles.set(t).catch(e => toast('Bubbles DB Error: ' + e.message, 'error'));
+            _bumpCatalogVersion();
+        }
+
+        // Products/syrups/bubbles barely change, so this checks one small
+        // version number instead of re-downloading the whole menu on every
+        // single visit -- only fetches fresh data when that number has
+        // actually moved since the last time this browser loaded it.
+        function loadCatalogWithCache() {
+            return _ref.catalogVersion.once('value').then(vSnap => {
+                const version = vSnap.val() || 0;
+                const cache = ls('bolik_catalog_cache');
+                if (cache && cache.version === version) {
+                    _dbProducts = cache.products;
+                    _dbSyrups = cache.syrups;
+                    _dbBubbles = cache.bubbles;
+                    return;
+                }
+                return Promise.all([
+                    _ref.products.once('value'),
+                    _ref.syrups.once('value'),
+                    _ref.bubbles.once('value')
+                ]).then(([pSnap, sSnap, bSnap]) => {
+                    _dbProducts = _fbArr(pSnap);
+                    _dbSyrups = _fbArr(sSnap);
+                    _dbBubbles = _fbArr(bSnap);
+                    ls('bolik_catalog_cache', { version, products: _dbProducts, syrups: _dbSyrups, bubbles: _dbBubbles });
+                });
+            });
         }
 
         function getTeam() {
