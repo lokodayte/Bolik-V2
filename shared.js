@@ -108,7 +108,7 @@
             syrups: _fb.ref('bolik_syrups'),
             bubbles: _fb.ref('bolik_bubbles'),
             team: _fb.ref('bolik_team'),
-            teamMigratedV2: _fb.ref('bolik_team_migrated_v2')
+            teamMigratedV3: _fb.ref('bolik_team_migrated_v3')
         };
 
         // ── STATE (shared across pages) ──
@@ -332,7 +332,7 @@
             }
         ];
 
-        // Runs once ever (tracked via bolik_team_migrated_v2) to reset the
+        // Runs once ever (tracked via bolik_team_migrated_v3) to reset the
         // team list to exactly DEFAULT_TEAM, replacing the old isLeader
         // model. Requires admin/superadmin write permission, so only
         // attempt it when the logged-in user actually has that — an
@@ -341,9 +341,24 @@
         // permission-denied error toast for no reason.
         function initTeam(canManage) {
             if (!canManage) return Promise.resolve();
-            return _ref.teamMigratedV2.once('value').then(snap => {
+            return _ref.teamMigratedV3.once('value').then(snap => {
                 if (snap.val()) return;
-                return saveTeam(DEFAULT_TEAM).then(() => _ref.teamMigratedV2.set(true));
+                // Merge onto whatever's already there instead of blindly
+                // overwriting — this preserves any photo/description already
+                // uploaded for Boris, Elina, Matteo (matched by id) rather
+                // than resetting them to the bare DEFAULT_TEAM placeholders.
+                const existing = _dbTeam || [];
+                const findExisting = (id, name) => existing.find(x => x.id === id) || existing.find(x => x.name === name);
+                const merged = DEFAULT_TEAM.map(def => {
+                    const old = findExisting(def.id, def.name);
+                    if (!old) return def;
+                    return {
+                        ...def,
+                        photo: old.photo || def.photo,
+                        description: old.description || def.description
+                    };
+                });
+                return saveTeam(merged).then(() => _ref.teamMigratedV3.set(true));
             });
         }
 

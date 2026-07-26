@@ -29,7 +29,7 @@
       ".read": true,
       ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-    "bolik_team_migrated_v2": {
+    "bolik_team_migrated_v3": {
       ".read": true,
       ".write": "auth != null && (root.child('bolik_users').child(auth.uid).child('role').val() === 'admin' || root.child('bolik_users').child(auth.uid).child('role').val() === 'superadmin')"
     }
