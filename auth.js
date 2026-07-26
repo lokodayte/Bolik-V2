@@ -28,6 +28,29 @@
             el.classList.add('active')
         }
 
+        // Works for both first-time sign-up and returning sign-in — Firebase
+        // creates the underlying account transparently either way, so there's
+        // no separate "register with Google" path.
+        //
+        // Note: this function does NOT itself decide what happens after a
+        // successful sign-in (domain check, profile creation, redirect).
+        // Firebase fires onAuthStateChanged the instant the popup resolves —
+        // before this function's own .then() would run — so that listener
+        // (in the INIT block below) is the single place that decides whether
+        // to accept the session. Duplicating that logic here would race it.
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            _auth.signInWithPopup(provider).catch(err => {
+                if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+                if (err.code === 'auth/account-exists-with-different-credential') {
+                    toast('An account already exists for this email — please sign in with your password instead.', 'error');
+                } else {
+                    toast('Google sign-in failed: ' + err.message, 'error');
+                }
+            });
+        }
+
         function handleLogin(ev) {
             ev.preventDefault();
             clearErrs();
@@ -259,14 +282,46 @@
         document.addEventListener('DOMContentLoaded', () => {
             $('auth-page').style.display = 'none';
 
-            // Already signed in (real Firebase Auth session, not a localStorage
-            // flag)? Skip the landing page entirely.
+            // Single authority for "is this session acceptable" — covers
+            // being already signed in on page load AND a Google popup
+            // resolving (which fires this before any other code runs, ahead
+            // of signInWithGoogle's own .then()). The domain check and the
+            // "redirect once a profile exists" check apply to every sign-in
+            // method. Auto-creating a *missing* profile only happens for
+            // Google sign-ins: password-based flows (login/registration/
+            // migration) already create their own profile via an explicit
+            // call before redirecting, and racing that here with a second,
+            // default-role write could leave the wrong role saved depending
+            // on which write lands last.
             _auth.onAuthStateChanged(user => {
-                if (user) {
-                    window.location.href = 'index.html';
+                if (!user) {
+                    $('landing-page').style.display = 'flex';
                     return;
                 }
-                $('landing-page').style.display = 'flex';
+                const email = (user.email || '').toLowerCase();
+                if (!validEmail(email)) {
+                    _auth.signOut().then(() => {
+                        toast('Only @uwcdilijan.am or @student.uwcdilijan.am accounts are allowed.', 'error');
+                    });
+                    return;
+                }
+                _ref.users.child(user.uid).once('value').then(snap => {
+                    if (snap.val()) {
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    const isGoogle = (user.providerData || []).some(p => p.providerId === 'google.com');
+                    if (!isGoogle) return;
+                    const role = (email === SUPERADMIN_EMAIL) ? 'superadmin' : 'customer';
+                    return saveUserProfile(user.uid, {
+                        uid: user.uid,
+                        email,
+                        name: user.displayName || email.split('@')[0],
+                        role
+                    }).then(() => {
+                        window.location.href = 'index.html';
+                    });
+                });
             });
 
             // Keep the public team grid live if it changes while someone's browsing.

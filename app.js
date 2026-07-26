@@ -18,6 +18,11 @@
         }
 
         function openChangePassword() {
+            const providers = (_auth.currentUser.providerData || []).map(p => p.providerId);
+            if (!providers.includes('password')) {
+                toast("You signed in with Google — there's no password to change.", 'info');
+                return;
+            }
             const ov = $('modal-overlay');
             ov.classList.remove('hidden');
             ov.innerHTML = `<div class="modal">
