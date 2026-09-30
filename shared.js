@@ -98,7 +98,7 @@
         // ── EMAILJS (registration OTP) ──
         const EMAILJS_SERVICE_ID = 'Bolik';
         const EMAILJS_TEMPLATE_ID = 'template_xj6bigj';
-        const EMAILJS_PUBLIC_KEY = '4Rhjzk_gR3p1Vst5g';
+        const EMAILJS_PUBLIC_KEY = 'YJXT3JC_0tD2AjeQp';
         emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
         const _ref = {
