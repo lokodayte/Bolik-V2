@@ -37,8 +37,19 @@
                 showErr('login-email-err', 'Only @uwcdilijan.am or @student.uwcdilijan.am emails allowed');
                 return
             }
-            _auth.signInWithEmailAndPassword(email, pass).then(() => {
-                loginAs();
+            _auth.signInWithEmailAndPassword(email, pass).then(cred => {
+                // The Auth account and password are both correct, but if
+                // the profile write from registration never finished, this
+                // is an orphaned account -- redirecting them into the app
+                // would just hit "profile not found" again. Tell them
+                // exactly how to finish it instead of a dead end.
+                return _ref.users.child(cred.user.uid).once('value').then(snap => {
+                    if (snap.val()) {
+                        loginAs();
+                        return;
+                    }
+                    showErr('login-pass-err', 'Your account wasn\'t fully set up. Please go to Register and use this same email and password to finish it.');
+                });
             }).catch(err => {
                 const noSuchAuthAccount = ['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential']
                     .includes(err.code);
@@ -233,11 +244,35 @@
             }).then(() => {
                 loginAs();
             }).catch(err => {
+                if (err.code === 'auth/email-already-in-use') {
+                    // The Firebase Auth account may exist from a previous
+                    // registration attempt whose profile write never
+                    // finished (dropped connection, closed tab, etc.) --
+                    // that leaves someone unable to register (account
+                    // exists) AND unable to log in (no profile). If this
+                    // password matches that orphaned account, finish the
+                    // interrupted registration now instead of leaving them
+                    // stuck with no way forward.
+                    _auth.signInWithEmailAndPassword(email, pass).then(cred => {
+                        return _ref.users.child(cred.user.uid).once('value').then(snap => {
+                            if (snap.val()) {
+                                $('otp-step').classList.add('hidden');
+                                $('register-form').classList.remove('hidden');
+                                showErr('reg-email-err', 'An account with this email already exists — please sign in instead.');
+                                return;
+                            }
+                            return saveUserProfile(cred.user.uid, { uid: cred.user.uid, email, name, role }).then(loginAs);
+                        });
+                    }).catch(() => {
+                        $('otp-step').classList.add('hidden');
+                        $('register-form').classList.remove('hidden');
+                        showErr('reg-email-err', 'An account with this email already exists');
+                    });
+                    return;
+                }
                 $('otp-step').classList.add('hidden');
                 $('register-form').classList.remove('hidden');
-                if (err.code === 'auth/email-already-in-use') {
-                    showErr('reg-email-err', 'An account with this email already exists');
-                } else if (err.code === 'auth/weak-password') {
+                if (err.code === 'auth/weak-password') {
                     showErr('reg-pass-err', 'Password is too weak, please choose a stronger one');
                 } else {
                     showErr('reg-email-err', 'Could not create your account: ' + err.message);
